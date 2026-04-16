@@ -20,7 +20,9 @@ Produces a final ecosystem flux dataset from eddy covariance and meteorological 
 │   ├── 02_timelag_checks.py
 │   ├── 03_winddir_check.py
 │   ├── 04_fluxprocessingchain_NEE.py
-│   └── 05_fluxprocessingchain_LE.py
+│   ├── 05_fluxprocessingchain_LE.py
+│   ├── 06_merge_data.py
+│   └── 07_plot_NEE.py
 │
 ├── data/
 │   ├── OPENLAG-IRGA-Level-0_.../  # Raw EddyPro FLUXNET CSV input files
@@ -44,6 +46,8 @@ Produces a final ecosystem flux dataset from eddy covariance and meteorological 
 | `03_winddir_check.py` | `FLUXES_L0_ALL.parquet` | — | Wind direction offset check across years using `WindDirOffset`; identifies per-year corrections |
 | `04_fluxprocessingchain_NEE.py` | `FLUXES_L0_ALL.parquet` | L4 NEE parquet + plots | Full NEE flux processing chain (QCF, USTAR filtering, gap-filling) via `FluxProcessingChain` |
 | `05_fluxprocessingchain_LE.py` | `FLUXES_L0_ALL.parquet` | L4 LE parquet + plots | Full LE flux processing chain via `FluxProcessingChain` |
+| `06_merge_data.py` | L4 NEE + LE parquets | `06_L4.1_FLUXES_MERGED.parquet/.csv` | Merges NEE and LE L4 datasets into single output file |
+| `07_plot_NEE.py` | L4 merged parquet | `07_NEE_timeseries_*.png`, `07_NEE_DielCycle_*.png` | NEE visualization with time series, cumulative flux, and mean diel cycle analysis |
 
 ### Notebooks — 00_PRELIMINARY_L0
 
