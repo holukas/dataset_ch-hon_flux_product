@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CH-HON Flux Product Dataset</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            padding: 4rem 0;
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 2px solid #334155;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            margin-bottom: 1.5rem;
+        }
+
+        .status {
+            display: inline-flex;
+            gap: 2rem;
+            padding: 1rem 2rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .status-label {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.3rem;
+        }
+
+        .status-value {
+            color: #0ea5e9;
+            font-weight: 600;
+        }
+
+        /* Main content */
+        main {
+            margin-bottom: 4rem;
+        }
+
+        section {
+            margin-bottom: 3.5rem;
+        }
+
+        section:last-child {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #06b6d4;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #334155;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        h2::before {
+            content: '';
+            width: 4px;
+            height: 1.5rem;
+            background: linear-gradient(180deg, #0ea5e9, #06b6d4);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: #0ea5e9;
+            margin: 1.5rem 0 0.8rem 0;
+            font-weight: 600;
+        }
+
+        /* Lists */
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+            color: #cbd5e1;
+        }
+
+        li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #0ea5e9;
+            font-weight: bold;
+        }
+
+        a {
+            color: #0ea5e9;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        a:hover {
+            color: #06b6d4;
+            border-bottom-color: #06b6d4;
+        }
+
+        /* Code blocks */
+        code {
+            background: rgba(30, 41, 59, 0.8);
+            color: #0ea5e9;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid #334155;
+        }
+
+        pre {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: #cbd5e1;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+
+        thead {
+            background: rgba(6, 182, 212, 0.1);
+            border-bottom: 2px solid #334155;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            color: #06b6d4;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 0.9rem 1rem;
+            color: #cbd5e1;
+            border-bottom: 1px solid #1e293b;
+            font-size: 0.9rem;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Info boxes */
+        .info-box {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.1));
+            border-left: 4px solid #0ea5e9;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-box strong {
+            color: #0ea5e9;
+        }
+
+        /* File tree */
+        .tree {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-family: 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            overflow-x: auto;
+            line-height: 1.8;
+        }
+
+        .tree-folder {
+            color: #0ea5e9;
+            font-weight: 600;
+        }
+
+        .tree-comment {
+            color: #64748b;
+            margin-left: 2rem;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            background: rgba(14, 165, 233, 0.2);
+            color: #0ea5e9;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            border: 1px solid #0ea5e9;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 2px solid #334155;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #64748b;
+            border-bottom-color: #64748b;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .wrapper {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .status {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            table {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 0.7rem;
+            }
+
+            pre {
+                padding: 1rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1>⚗️ CH-HON Flux Product</h1>
+            <p>Flux data processing pipeline for the CH-HON forest station</p>
+            <p style="color: #94a3b8; margin-bottom: 1.5rem;">Produces a final ecosystem flux dataset from eddy covariance and meteorological measurements</p>
+            <div class="status">
+                <div class="status-item">
+                    <span class="status-label">Fluxes</span>
+                    <span class="status-value">L0 Complete</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Meteo</span>
+                    <span class="status-value">In Progress</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Progress</span>
+                    <a href="https://docs.google.com/spreadsheets/d/15jmOvfX0WIRGg2_N4bnhIOrvpsJkGhBQ296hzo7W0eU/edit?gid=0#gid=0" target="_blank" style="color: #0ea5e9;">View Tracker</a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Project Structure -->
+            <section>
+                <h2>Project Structure</h2>
+                <div class="tree">
+.<br>
+├── <span class="tree-folder">src/</span> <span class="tree-comment"># Production scripts (run in order)</span><br>
+│   ├── funcs.py<br>
+│   ├── 01_merge_files_to_parquet.py<br>
+│   ├── 02_timelag_checks.py<br>
+│   ├── 03_winddir_check.py<br>
+│   ├── 04_fluxprocessingchain_NEE.py<br>
+│   └── 05_fluxprocessingchain_LE.py<br>
+├── <span class="tree-folder">data/</span><br>
+│   ├── OPENLAG-IRGA-Level-0.../ <span class="tree-comment"># Raw EddyPro FLUXNET CSV</span><br>
+│   └── <span class="tree-folder">out/</span> <span class="tree-comment"># All outputs</span><br>
+└── <span class="tree-folder">notebooks/</span><br>
+    ├── <span class="tree-folder">00_PRELIMINARY_L0/</span> <span class="tree-comment"># L0 flux processing</span><br>
+    └── <span class="tree-folder">10_METEO/</span> <span class="tree-comment"># Meteo screening</span>
+                </div>
+            </section>
+
+            <!-- Pipeline -->
+            <section>
+                <h2>Processing Pipeline</h2>
+
+                <h3>Production Scripts (<code>src/</code>)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Script</th>
+                            <th>Input</th>
+                            <th>Output</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>01_merge_files_to_parquet.py</code></td>
+                            <td>EddyPro FLUXNET CSVs</td>
+                            <td><code>FLUXES_L0_ALL.parquet</code></td>
+                            <td>Merges raw EddyPro output files into a single dataset</td>
+                        </tr>
+                        <tr>
+                            <td><code>02_timelag_checks.py</code></td>
+                            <td><code>FLUXES_L0_ALL.parquet</code></td>
+                            <td><code>02_*_TLAG_*.png</code></td>
+                            <td>Time lag distribution analysis; detects peak and search range</td>
+                        </tr>
+                        <tr>
+                            <td><code>03_winddir_check.py</code></td>
+                            <td><code>FLUXES_L0_ALL.parquet</code></td>
+                            <td>—</td>
+                            <td>Wind direction offset check across years</td>
+                        </tr>
+                        <tr>
+                            <td><code>04_fluxprocessingchain_NEE.py</code></td>
+                            <td><code>FLUXES_L0_ALL.parquet</code></td>
+                            <td>L4 NEE parquet + plots</td>
+                            <td>NEE flux processing chain (QCF, USTAR, gap-filling)</td>
+                        </tr>
+                        <tr>
+                            <td><code>05_fluxprocessingchain_LE.py</code></td>
+                            <td><code>FLUXES_L0_ALL.parquet</code></td>
+                            <td>L4 LE parquet + plots</td>
+                            <td>LE flux processing chain</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Notebooks — 00_PRELIMINARY_L0</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Notebook</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>01_L0_merge_output_to_parquet</code></td>
+                            <td>Exploratory merge (mirrors script 01)</td>
+                        </tr>
+                        <tr>
+                            <td><code>02_L0_timelags_check</code></td>
+                            <td>Time lag QC (mirrors script 02)</td>
+                        </tr>
+                        <tr>
+                            <td><code>03_L0_winddir_check</code></td>
+                            <td>Wind direction quality check</td>
+                        </tr>
+                        <tr>
+                            <td><code>20.1_FluxProcessingChain_NEE</code></td>
+                            <td>NEE processing with 3 USTAR scenarios</td>
+                        </tr>
+                        <tr>
+                            <td><code>21.1_FluxProcessingChain_NEE-L0</code></td>
+                            <td>Full NEE chain → L4 preliminary</td>
+                        </tr>
+                        <tr>
+                            <td><code>22.1_FluxProcessingChain_LE-L0</code></td>
+                            <td>Full LE chain → L4 preliminary</td>
+                        </tr>
+                        <tr>
+                            <td><code>50_PLOT_Cumulative_NEE</code></td>
+                            <td>Cumulative NEE plots</td>
+                        </tr>
+                        <tr>
+                            <td><code>51_PLOT_DielCycles_NEE_LE</code></td>
+                            <td>Diel cycle plots</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Notebooks — 10_METEO</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Notebook</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_StepwiseMeteoScreening</code></td>
+                            <td>Quality screening of meteorological variables</td>
+                        </tr>
+                        <tr>
+                            <td><code>TA_T1_4_1/2_...</code></td>
+                            <td>Air temperature sensor screening</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Domain Notes -->
+            <section>
+                <h2>Domain Knowledge</h2>
+
+                <h3>⏱️ Time Lags (EddyPro)</h3>
+                <ul>
+                    <li>EddyPro outputs time lags in <strong>0.05s discrete steps</strong></li>
+                    <li>EddyPro <strong>excludes boundary values</strong> of the specified search range
+                        <ul style="margin-top: 0.5rem;">
+                            <li>e.g. a range of <code>0.10–1.00s</code> results in EddyPro using <code>0.15–0.95s</code></li>
+                            <li>Scripts automatically expand detected ranges by ±0.05s</li>
+                        </ul>
+                    </li>
+                    <li><strong>Fringe bins</strong> at edges accumulate non-physical lags and are excluded from peak detection</li>
+                </ul>
+
+                <h3>📊 Processing Levels</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Level</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge">L0</span></td>
+                            <td>Preliminary fluxes — raw EddyPro output, open lag window, no final QC</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge">L4</span></td>
+                            <td>Gap-filled, quality-filtered flux product (target output)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Dependencies -->
+            <section>
+                <h2>Installation & Dependencies</h2>
+                <p>Managed with <a href="https://python-poetry.org/" target="_blank">Poetry</a>. Install environment:</p>
+                <pre><code>poetry install</code></pre>
+                <p style="margin-top: 1.5rem;"><strong>Primary libraries:</strong></p>
+                <ul>
+                    <li><a href="https://github.com/holukas/diive" target="_blank"><code>diive</code></a> — IO, plotting, histogram analysis</li>
+                    <li><code>pandas</code> — data manipulation</li>
+                    <li><code>matplotlib</code> — visualization</li>
+                    <li><code>numpy</code> — numerical computing</li>
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <p>📍 CH-HON Forest Station | Processing Pipeline Documentation</p>
+            <p style="margin-top: 0.5rem; color: #475569;">Last updated: April 2026</p>
+        </footer>
+    </div>
+</body>
+</html>

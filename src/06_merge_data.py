@@ -27,6 +27,7 @@ filepath_le = Path(SOURCEDIR) / FILENAME_LE
 
 print(f"Loading NEE: {filepath_nee}")
 df_nee = load_parquet(filepath=str(filepath_nee))
+[print(c) for c in df_nee.columns if "NEE" in c];
 
 print(f"Loading LE: {filepath_le}")
 df_le = load_parquet(filepath=str(filepath_le))
