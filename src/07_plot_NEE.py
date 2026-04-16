@@ -2,12 +2,21 @@
 Plot NEE time series and cumulative flux in g C m⁻² 30min⁻¹
 """
 
-import matplotlib.pyplot as plt
+import importlib.metadata
+import warnings
+from pathlib import Path
+
 import matplotlib.dates as mdates
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
-from pathlib import Path
 from diive.core.io.files import load_parquet
+from diive.core.plotting.dielcycle import DielCycle
+
+warnings.filterwarnings('ignore')
+version_diive = importlib.metadata.version("diive")
+print(f"diive version: v{version_diive}")
 
 # Apply modern plot style
 plt.style.use('seaborn-v0_8-darkgrid')
@@ -79,10 +88,12 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), gridspec_kw={'height_rati
 years = nee_gc.index.year.unique()
 year_starts = [pd.Timestamp(year, 1, 1) for year in years if pd.Timestamp(year, 1, 1) >= nee_gc.index[0]]
 
+
 # Custom date formatter: show all months as Jan Feb Mar etc
 def date_formatter(x, pos):
     d = mdates.num2date(x)
     return d.strftime('%b')
+
 
 # Top: Time series (g C)
 ax1.plot(nee_gc.index, nee_gc, alpha=0.8, c='#388E3C', linewidth=0.7)
@@ -156,6 +167,7 @@ ax2.grid(True, alpha=0.2)
 # Y-axis: start at zero
 ax2.set_ylim(bottom=0)
 
+
 # Date formatter for bottom panel: show year at January, months otherwise
 def year_formatter(x, pos):
     d = mdates.num2date(x)
@@ -163,6 +175,7 @@ def year_formatter(x, pos):
         return f'{d.year}'
     else:
         return d.strftime('%b')
+
 
 # Improve date formatting on x-axis
 ax2.xaxis.set_major_locator(mdates.MonthLocator())  # Major ticks every month
@@ -195,5 +208,36 @@ plt.tight_layout()
 outfile = DATA_OUT_DIR / f"07_NEE_timeseries_{nee_gc.index[0].date()}_{nee_gc.index[-1].date()}.png"
 fig.savefig(outfile, dpi=150, bbox_inches='tight')
 print(f"\nSaved: {outfile}")
+
+fig.show()
+
+# ============================================================================
+# Diel Cycle Analysis
+# ============================================================================
+
+fig = plt.figure(facecolor='#ffffff', figsize=(14, 10), dpi=150)
+gs = gridspec.GridSpec(1, 1)
+gs.update(wspace=0.3, hspace=0.3, left=0.08, right=0.95, top=0.95, bottom=0.08)
+ax_dc = fig.add_subplot(gs[0, 0])
+
+# Plot diel cycle for NEE
+dc_nee = DielCycle(series=nee_gc)
+units = r'(g C m$^{-2}$ 30min$^{-1}$)'
+dc_nee.plot(ax=ax_dc, title=f"Mean Diel Cycle", txt_ylabel_units=units,
+            each_month=True, legend_n_col=4, ylabel=r"Mean NEE",
+            showgrid=True, show_xticklabels=True, show_xlabel=True)
+
+# Add variable name in upper right corner
+fig.text(0.94, 0.96, NEE_COL, ha='right', va='top', fontsize=10,
+         style='italic', color='#6c757d', weight='normal')
+
+# Remove ticks on secondary (right and top) spines
+ax_dc.tick_params(axis='x', which='both', top=False)
+ax_dc.tick_params(axis='y', which='both', right=False)
+
+plt.tight_layout()
+outfile_dc = DATA_OUT_DIR / f"07_NEE_DielCycle_{nee_gc.index[0].date()}_{nee_gc.index[-1].date()}.png"
+fig.savefig(outfile_dc, dpi=150, bbox_inches='tight')
+print(f"Saved: {outfile_dc}")
 
 fig.show()
