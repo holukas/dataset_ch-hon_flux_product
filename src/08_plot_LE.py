@@ -1,5 +1,5 @@
 """
-Plot LE (latent heat flux) as evapotranspiration (ET) in mm 30min⁻¹
+Plot LE (latent heat flux) as evapotranspiration (ET) in mm 30min-1
 """
 
 import importlib.metadata
@@ -40,10 +40,10 @@ DATA_OUT_DIR = SCRIPT_DIR.parent / "data" / "out"
 FILENAME = "06_L4.1_FLUXES_MERGED.parquet"
 LE_COL = "LE_L3.1_L3.3_CUT_NONE_QCF_gfXG"
 
-# Unit conversion: W m⁻² → mm 30min⁻¹ (evapotranspiration)
-# ET (mm) = LE (W m⁻²) × time (s) / (λ (J/kg) × ρ (kg/m³))
-# λ = 2.45 MJ/kg (latent heat of vaporization)
-# ρ = 1000 kg/m³ (water density)
+# Unit conversion: W m-2 to mm 30min-1 (evapotranspiration)
+# ET (mm) = LE (W m-2) x time (s) / (lambda (J/kg) x rho (kg/m3))
+# lambda = 2.45 MJ/kg (latent heat of vaporization)
+# rho = 1000 kg/m3 (water density)
 # 30 min = 1800 seconds
 # = 1800 / (2.45e6 × 1000) = 7.3469e-4 mm/W
 LE_TO_ET_30MIN = 7.3469e-4
@@ -64,14 +64,14 @@ df = load_parquet(filepath=str(filepath))
 
 print(f"\nExtracting column: {LE_COL}")
 le_wm2 = df[LE_COL].copy()
-print(f"Original units: W m⁻²")
+print(f"Original units: W m-2")
 print(f"Valid data points: {le_wm2.notna().sum()} / {len(le_wm2)}")
 print(f"Mean: {le_wm2.mean():.3f}")
 print(f"Std: {le_wm2.std():.3f}")
 
-# Convert to ET mm 30min⁻¹
+# Convert to ET mm 30min-1
 et_mm = le_wm2 * LE_TO_ET_30MIN
-print(f"\nConverted units: mm 30min⁻¹ (evapotranspiration)")
+print(f"\nConverted units: mm 30min-1 (evapotranspiration)")
 print(f"Mean: {et_mm.mean():.6f}")
 print(f"Std: {et_mm.std():.6f}")
 

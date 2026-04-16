@@ -35,10 +35,10 @@ NEE_COL = "NEE_L3.1_L3.3_CUT_50_QCF_gfXG"
 LE_COL = "LE_L3.1_L3.3_CUT_NONE_QCF_gfXG"
 
 # Unit conversion factors
-# NEE: µmol CO₂ m⁻² s⁻¹ → g C m⁻² 30min⁻¹
+# NEE: umol CO2 m-2 s-1 to g C m-2 30min-1
 NEE_UMOL_TO_G_C_30MIN = 0.02161926
 
-# LE: W m⁻² → mm 30min⁻¹ (evapotranspiration)
+# LE: W m-2 to mm 30min-1 (evapotranspiration)
 LE_TO_ET_30MIN = 7.3469e-4
 
 # Color scheme - Material Design colors per year
@@ -71,10 +71,10 @@ df['year'] = df.index.year
 
 # Extract and convert variables
 nee_umol = df[NEE_COL].copy()
-nee = nee_umol * NEE_UMOL_TO_G_C_30MIN  # Convert to g C m⁻² 30min⁻¹
+nee = nee_umol * NEE_UMOL_TO_G_C_30MIN  # Convert to g C m-2 30min-1
 
 le = df[LE_COL].copy()
-et = le * LE_TO_ET_30MIN  # Convert to mm 30min⁻¹
+et = le * LE_TO_ET_30MIN  # Convert to mm 30min-1
 
 # Get available years
 years = sorted(df['year'].unique())
@@ -128,7 +128,7 @@ for month in months_to_plot:
         }
 
         print(f"  {year}: {cumulative_data_by_month[month][year]['days_count']} days, "
-              f"NEE={cumulative_data_by_month[month][year]['nee_total']:.1f} g C m⁻², "
+              f"NEE={cumulative_data_by_month[month][year]['nee_total']:.1f} g C m-2, "
               f"ET={cumulative_data_by_month[month][year]['et_total']:.1f} mm")
 
 # ============================================================================

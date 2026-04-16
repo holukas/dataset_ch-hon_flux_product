@@ -47,7 +47,8 @@ The station is a test plantation comparing 8 tree species from multiple geograph
 │   ├── 06_merge_data.py
 │   ├── 07_plot_NEE.py
 │   ├── 08_plot_LE.py
-│   └── 09_march_comparison.py
+│   ├── 09_march_comparison.py
+│   └── 10_plot_NEE_hexbin.py
 │
 ├── data/
 │   ├── OPENLAG-IRGA-Level-0_.../  # Raw EddyPro FLUXNET CSV input files
@@ -74,6 +75,7 @@ The station is a test plantation comparing 8 tree species from multiple geograph
 | `07_plot_NEE.py`                | L4 merged parquet       | `07_NEE_timeseries_*.png`, `07_NEE_DielCycle_*.png` | NEE visualization with time series, cumulative flux, and mean diel cycle analysis                                 |
 | `08_plot_LE.py`                 | L4 merged parquet       | `08_LE_timeseries_*.png`, `08_LE_DielCycle_*.png`   | LE visualization as evapotranspiration (ET in mm) with time series, cumulative ET, and mean diel cycle analysis   |
 | `09_march_comparison.py`        | L4 merged parquet       | `09_March_comparison.png`                           | Interannual March comparison: cumulative NEE and ET (2024-2026) overlaid on same plot with half-hourly resolution |
+| `10_plot_NEE_hexbin.py`         | L4 merged parquet       | `10_NEE_hexbin_TA_VPD_*.png`                        | Hexbin plot showing NEE response to temperature and vapor pressure deficit; reveals photosynthetic limitations   |
 
 ---
 

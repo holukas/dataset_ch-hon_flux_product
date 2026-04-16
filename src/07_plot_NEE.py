@@ -1,5 +1,5 @@
 """
-Plot NEE time series and cumulative flux in g C m⁻² 30min⁻¹
+Plot NEE time series and cumulative flux in g C m-2 30min-1
 """
 
 import importlib.metadata
@@ -40,10 +40,10 @@ DATA_OUT_DIR = SCRIPT_DIR.parent / "data" / "out"
 FILENAME = "06_L4.1_FLUXES_MERGED.parquet"
 NEE_COL = "NEE_L3.1_L3.3_CUT_50_QCF_gfXG"
 
-# Unit conversion: µmol CO₂ m⁻² s⁻¹ → g C m⁻² 30min⁻¹
+# Unit conversion: umol CO2 m-2 s-1 to g C m-2 30min-1
 # For 30-minute flux data:
-# = µmol → min (×60) → 30min (×30) → µg CO₂ (×44.0095) → g (×10⁻⁶) → g C (×12/44)
-# = 60 × 30 × 44.0095 × 10⁻⁶ × (12/44) = 0.02161926
+# = umol to min (x60) to 30min (x30) to ug CO2 (x44.0095) to g (x10-6) to g C (x12/44)
+# = 60 x 30 x 44.0095 x 10-6 x (12/44) = 0.02161926
 UMOL_TO_G_C_30MIN = 0.02161926
 
 script_id = "07"
@@ -62,21 +62,21 @@ df = load_parquet(filepath=str(filepath))
 
 print(f"\nExtracting column: {NEE_COL}")
 nee_umol = df[NEE_COL].copy()
-print(f"Original units: µmol m⁻² s⁻¹")
+print(f"Original units: umol m-2 s-1")
 print(f"Valid data points: {nee_umol.notna().sum()} / {len(nee_umol)}")
 print(f"Mean: {nee_umol.mean():.3f}")
 print(f"Std: {nee_umol.std():.3f}")
 
-# Convert to g C m⁻² 30min⁻¹
+# Convert to g C m-2 30min-1
 nee_gc = nee_umol * UMOL_TO_G_C_30MIN
-print(f"\nConverted units: g C m⁻² 30min⁻¹")
+print(f"\nConverted units: g C m-2 30min-1")
 print(f"Mean: {nee_gc.mean():.6f}")
 print(f"Std: {nee_gc.std():.6f}")
 
 # Calculate cumulative flux (replacing NaN with 0 for accumulation)
 nee_gc_filled = nee_gc.fillna(0)
 nee_cumulative = nee_gc_filled.cumsum()
-print(f"Cumulative range: {nee_cumulative.min():.3f} to {nee_cumulative.max():.3f} g C m⁻²")
+print(f"Cumulative range: {nee_cumulative.min():.3f} to {nee_cumulative.max():.3f} g C m-2")
 
 # ============================================================================
 # Plot

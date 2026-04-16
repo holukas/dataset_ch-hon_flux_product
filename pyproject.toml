@@ -1,24 +1,24 @@
-[project]
+[tool.poetry]
 name = "dataset-ch-hon-flux-product"
 version = "0.1.0"
-description = "Dataset for young forest CH-HON"
-authors = [
-    {name = "Lukas Hörtnagl",email = "lukas.hoertnagl@usys.ethz.ch"}
-]
+description = "Flux data processing pipeline for the CH-HON forest station"
+authors = ["Lukas Hörtnagl <lukas.hoertnagl@usys.ethz.ch>"]
 readme = "README.md"
-requires-python = ">=3.11,<3.12"
-dependencies = [
-]
+packages = [{include = "src"}]
 
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+pandas = "^2.0"
+matplotlib = "^3.8"
+numpy = "^1.24"
+diive = { path = "../../21 - DIIVE/diive", develop = true }
 
 [tool.poetry.group.dev.dependencies]
-diive = { path = "../../21 - DIIVE/diive", develop = true }
 dbc-influxdb = { path = "../../22 - POET/dbc-influxdb", develop = true }
 ghp-import = "^2.1.0"
 jupyter-book = "^1.0.4.post1"
 sphinxcontrib-mermaid = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

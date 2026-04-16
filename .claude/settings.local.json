@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python src/10_plot_NEE_hexbin.py)",
+      "Bash(poetry install:*)",
+      "Bash(\"C:\\\\Users\\\\nopan\\\\miniconda3\\\\envs\\\\hon_fp\\\\python.exe\" src/10_plot_NEE_hexbin.py)",
+      "Bash(\"C:\\\\Users\\\\nopan\\\\miniconda3\\\\envs\\\\hon_fp\\\\python.exe\" -c \"import diive as dv; print\\(dir\\(dv\\)\\)\")",
+      "Bash(\"C:\\\\Users\\\\nopan\\\\miniconda3\\\\envs\\\\hon_fp\\\\python.exe\" -c \"import diive; help\\(diive.hexbinplot\\)\")",
+      "Bash(\"C:\\\\Users\\\\nopan\\\\miniconda3\\\\envs\\\\hon_fp\\\\python.exe\" src/07_plot_NEE.py)",
+      "Bash(\"C:\\\\Users\\\\nopan\\\\miniconda3\\\\envs\\\\hon_fp\\\\python.exe\" src/08_plot_LE.py)",
+      "Bash(\"C:\\\\Users\\\\nopan\\\\miniconda3\\\\envs\\\\hon_fp\\\\python.exe\" src/09_march_comparison.py)",
+      "Bash(\"C:\\\\Users\\\\nopan\\\\miniconda3\\\\envs\\\\hon_fp\\\\python.exe\")"
+    ]
+  }
+}
