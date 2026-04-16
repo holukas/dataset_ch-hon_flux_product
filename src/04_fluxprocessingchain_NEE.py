@@ -246,19 +246,56 @@ for key, value in fpc.level33_qcf.items():
 # ----------------------
 FEATURES = ["TA_EP", "SW_IN_POT", "VPD_EP"]
 
+
+# # Level-4.1: Random Forest Gap-Filling with Feature Engineering (v0.91.0)
+# fpc.level41_longterm_random_forest(
+#     features=FEATURES,
+#     # Feature Engineering Parameters
+#     features_lag=[-2, -1],
+#     features_lag_stepsize=1,
+#     features_lag_exclude_cols=None,
+#     features_rolling=[6],
+#     features_rolling_exclude_cols=None,
+#     features_rolling_stats=['median', 'min', 'max'],
+#     features_diff=[1],
+#     features_diff_exclude_cols=None,
+#     features_ema=[6],  # NEW in v0.91.0: Exponential Moving Average features
+#     features_ema_exclude_cols=None,  # NEW in v0.91.0
+#     features_poly_degree=2,
+#     features_poly_exclude_cols=None,
+#     features_stl=True,
+#     features_stl_method='stl',
+#     features_stl_seasonal_period=None,
+#     features_stl_exclude_cols=None,
+#     features_stl_components=None,
+#     vectorize_timestamps=True,
+#     add_continuous_record_number=True,
+#     sanitize_timestamp=True,
+#     # Gap-Filling Parameters
+#     reduce_features=False,
+#     verbose=True,
+#     # Random Forest Hyperparameters
+#     n_estimators=100,
+#     max_depth=None,
+#     min_samples_split=10,
+#     min_samples_leaf=5,
+#     n_jobs=-1,
+#     random_state=42,
+# )
+
 # Level-4.1: XGBoost Gap-Filling with Feature Engineering (v0.91.0, optional alternative)
 fpc.level41_longterm_xgboost(
     features=FEATURES,
     # Feature Engineering Parameters (same as Random Forest for fair comparison)
-    features_lag=[-1, 1],
+    features_lag=[-2, -1],
     features_lag_stepsize=1,
     features_lag_exclude_cols=None,
-    features_rolling=[12, 24, 48],
+    features_rolling=[3, 6, 12, 24, 48],
     features_rolling_exclude_cols=None,
-    features_rolling_stats=['median', 'min', 'max'],
+    features_rolling_stats=['median', 'min', 'max', 'std', 'q25', 'q75'],
     features_diff=[1, 2],
     features_diff_exclude_cols=None,
-    features_ema=[6, 12, 24],
+    features_ema=[3, 6, 12, 24],
     features_ema_exclude_cols=None,
     features_poly_degree=2,
     features_poly_exclude_cols=None,
@@ -276,12 +313,13 @@ fpc.level41_longterm_xgboost(
     # XGBoost Hyperparameters
     n_estimators=3000,
     max_depth=6,
-    learning_rate=0.5,
+    learning_rate=0.3,
     min_child_weight=99,
     early_stopping_rounds=100,
     n_jobs=-1,
     random_state=42,
 )
+
 # Access results: fpc.level41['long_term_xgboost']['CUT_50']
 results = fpc.get_data(verbose=1)
 # Show train/test details

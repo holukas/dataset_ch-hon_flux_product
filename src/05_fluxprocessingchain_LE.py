@@ -250,15 +250,15 @@ FEATURES = ["TA_EP", "SW_IN_POT", "VPD_EP"]
 fpc.level41_longterm_xgboost(
     features=FEATURES,
     # Feature Engineering Parameters (same as Random Forest for fair comparison)
-    features_lag=[-1, 1],
+    features_lag=[-2, -1],
     features_lag_stepsize=1,
     features_lag_exclude_cols=None,
-    features_rolling=[12, 24, 48],
+    features_rolling=[3, 6, 12, 24, 48],
     features_rolling_exclude_cols=None,
-    features_rolling_stats=['median', 'min', 'max'],
+    features_rolling_stats=['median', 'min', 'max', 'std', 'q25', 'q75'],
     features_diff=[1, 2],
     features_diff_exclude_cols=None,
-    features_ema=[6, 12, 24],
+    features_ema=[3, 6, 12, 24],
     features_ema_exclude_cols=None,
     features_poly_degree=2,
     features_poly_exclude_cols=None,
@@ -276,7 +276,7 @@ fpc.level41_longterm_xgboost(
     # XGBoost Hyperparameters
     n_estimators=3000,
     max_depth=6,
-    learning_rate=0.5,
+    learning_rate=0.3,
     min_child_weight=99,
     early_stopping_rounds=100,
     n_jobs=-1,
