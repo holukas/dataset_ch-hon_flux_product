@@ -22,7 +22,8 @@ Produces a final ecosystem flux dataset from eddy covariance and meteorological 
 │   ├── 04_fluxprocessingchain_NEE.py
 │   ├── 05_fluxprocessingchain_LE.py
 │   ├── 06_merge_data.py
-│   └── 07_plot_NEE.py
+│   ├── 07_plot_NEE.py
+│   └── 08_plot_LE.py
 │
 ├── data/
 │   ├── OPENLAG-IRGA-Level-0_.../  # Raw EddyPro FLUXNET CSV input files
@@ -48,6 +49,7 @@ Produces a final ecosystem flux dataset from eddy covariance and meteorological 
 | `05_fluxprocessingchain_LE.py` | `FLUXES_L0_ALL.parquet` | L4 LE parquet + plots | Full LE flux processing chain via `FluxProcessingChain` |
 | `06_merge_data.py` | L4 NEE + LE parquets | `06_L4.1_FLUXES_MERGED.parquet/.csv` | Merges NEE and LE L4 datasets into single output file |
 | `07_plot_NEE.py` | L4 merged parquet | `07_NEE_timeseries_*.png`, `07_NEE_DielCycle_*.png` | NEE visualization with time series, cumulative flux, and mean diel cycle analysis |
+| `08_plot_LE.py` | L4 merged parquet | `08_LE_timeseries_*.png`, `08_LE_DielCycle_*.png` | LE visualization as evapotranspiration (ET in mm) with time series, cumulative ET, and mean diel cycle analysis |
 
 ### Notebooks — 00_PRELIMINARY_L0
 
