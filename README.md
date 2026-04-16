@@ -17,7 +17,10 @@ Produces a final ecosystem flux dataset from eddy covariance and meteorological 
 ├── src/                          # Production scripts (run in order)
 │   ├── funcs.py                  # Shared utility functions
 │   ├── 01_merge_files_to_parquet.py
-│   └── 02_timelag_checks.py
+│   ├── 02_timelag_checks.py
+│   ├── 03_winddir_check.py
+│   ├── 04_fluxprocessingchain_NEE.py
+│   └── 05_fluxprocessingchain_LE.py
 │
 ├── data/
 │   ├── OPENLAG-IRGA-Level-0_.../  # Raw EddyPro FLUXNET CSV input files
@@ -38,6 +41,9 @@ Produces a final ecosystem flux dataset from eddy covariance and meteorological 
 |--------|-------|--------|-------------|
 | `01_merge_files_to_parquet.py` | EddyPro FLUXNET CSVs | `FLUXES_L0_ALL.parquet/.csv` | Merges raw EddyPro output files into a single dataset |
 | `02_timelag_checks.py` | `FLUXES_L0_ALL.parquet` | `02_*_TLAG_ACTUAL_*.png` | Time lag distribution analysis; detects peak and search range for EddyPro final run |
+| `03_winddir_check.py` | `FLUXES_L0_ALL.parquet` | — | Wind direction offset check across years using `WindDirOffset`; identifies per-year corrections |
+| `04_fluxprocessingchain_NEE.py` | `FLUXES_L0_ALL.parquet` | L4 NEE parquet + plots | Full NEE flux processing chain (QCF, USTAR filtering, gap-filling) via `FluxProcessingChain` |
+| `05_fluxprocessingchain_LE.py` | `FLUXES_L0_ALL.parquet` | L4 LE parquet + plots | Full LE flux processing chain via `FluxProcessingChain` |
 
 ### Notebooks — 00_PRELIMINARY_L0
 
