@@ -338,7 +338,7 @@ fpc.showplot_gapfilled_heatmap()
 fpc.showplot_gapfilled_cumulative(gain=0.02161926, units=r'($\mathrm{gC\ m^{-2}}$)', per_year=True, show_reference=False)
 fpc.showplot_gapfilled_cumulative(gain=0.02161926, units=r'($\mathrm{gC\ m^{-2}}$)', per_year=False)
 # fpc.showplot_feature_ranks_per_year()
-fpc.showplot_mds_gapfilling_qualities()
+# fpc.showplot_mds_gapfilling_qualities()
 
 # Save to files
 filename = f"{script_id}_FluxProcessingChain_L4.1_{FLUXVAR}"
