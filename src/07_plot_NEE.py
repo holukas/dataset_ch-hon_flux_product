@@ -52,7 +52,7 @@ script_id = "07"
 # Load data
 # ============================================================================
 
-filepath = DATA_OUT_DIR / FILENAME
+filepath = Path(r"F:\Sync\luhk_work\dev-data\datasets-data\dataset_ch-hon_flux_product-data\data\out") / FILENAME
 print(f"Loading: {filepath}")
 df = load_parquet(filepath=str(filepath))
 
@@ -89,10 +89,15 @@ years = nee_gc.index.year.unique()
 year_starts = [pd.Timestamp(year, 1, 1) for year in years if pd.Timestamp(year, 1, 1) >= nee_gc.index[0]]
 
 
-# Custom date formatter: show all months as Jan Feb Mar etc
+# German month abbreviations (avoids relying on system locale)
+MONTHS_DE = {1: 'Jan', 2: 'Feb', 3: 'Mär', 4: 'Apr', 5: 'Mai', 6: 'Jun',
+             7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Dez'}
+
+
+# Custom date formatter: show all months as Jan Feb Mär etc
 def date_formatter(x, pos):
     d = mdates.num2date(x)
-    return d.strftime('%b')
+    return MONTHS_DE[d.month]
 
 
 # Top: Time series (g C)
@@ -101,7 +106,7 @@ ax1.fill_between(nee_gc.index, nee_gc, alpha=0.15, color='#388E3C')
 ax1.axhline(0, color='#212529', linewidth=1, alpha=0.5, linestyle='-', zorder=5)
 for year_start in year_starts:
     ax1.axvline(year_start, color='#6c757d', linewidth=1, alpha=0.4, linestyle='--', zorder=2)
-ax1.set_title(r"NEE Time Series (g C m$^{-2}$ 30min$^{-1}$)", fontsize=14, fontweight='bold')
+ax1.set_title(r"Halbstündlicher Kohlenstoffaustausch", fontsize=14, fontweight='bold')
 ax1.set_ylabel(r"NEE (g C m$^{-2}$ 30min$^{-1}$)")
 ax1.grid(True, alpha=0.2)
 
@@ -151,17 +156,17 @@ for year in years_unique:
 
         year_days = (year_data.index[-1] - year_data.index[0]).days + 1
         year_avg = year_total / year_days if year_days > 0 else 0
-        yearly_text += f"{year}: {year_total:.0f} ({year_days} days, {year_avg:.1f} g C/day)\n"
+        yearly_text += f"{year}: {year_total:.0f} ({year_days} Tage, {year_avg:.1f} g C/Tag)\n"
 
 # Display total and yearly info
-textstr = f'Total: {total_nee:.0f} g C m$^{{-2}}$ ({total_days} days, {total_avg:.1f} g C/day)\n\n{yearly_text}'
+textstr = f'Gesamt: {total_nee:.0f} g C m$^{{-2}}$ ({total_days} Tage, {total_avg:.1f} g C/Tag)\n\n{yearly_text}'
 ax2.text(0.05, 0.92, textstr, transform=ax2.transAxes, fontsize=11, fontweight='bold',
          verticalalignment='top', horizontalalignment='left',
          color='#1b5e20', alpha=0.95, family='monospace',
          bbox=dict(boxstyle='round,pad=0.8', facecolor='#ffffff', alpha=0.05, edgecolor='none'))
 
-ax2.set_title(r"Cumulative NEE (g C m$^{-2}$)", fontsize=14, fontweight='bold')
-ax2.set_ylabel(r"Cumulative NEE (g C m$^{-2}$)")
+ax2.set_title(r"Kumulativer Kohlenstoffaustausch", fontsize=14, fontweight='bold')
+ax2.set_ylabel(r"Kumulativ (g C m$^{-2}$)")
 ax2.grid(True, alpha=0.2)
 
 # Y-axis: start at zero
@@ -174,7 +179,7 @@ def year_formatter(x, pos):
     if d.month == 1:
         return f'{d.year}'
     else:
-        return d.strftime('%b')
+        return MONTHS_DE[d.month]
 
 
 # Improve date formatting on x-axis
@@ -223,9 +228,21 @@ ax_dc = fig.add_subplot(gs[0, 0])
 # Plot diel cycle for NEE
 dc_nee = DielCycle(series=nee_gc)
 units = r'(g C m$^{-2}$ 30min$^{-1}$)'
-dc_nee.plot(ax=ax_dc, title=f"Mean Diel Cycle", txt_ylabel_units=units,
-            each_month=True, legend_n_col=4, ylabel=r"Mean NEE",
-            showgrid=True, show_xticklabels=True, show_xlabel=True)
+dc_nee.plot(ax=ax_dc, each_month=True,
+            show_xticklabels=True, show_xlabel=True)
+ax_dc.set_title("Mittlerer Tagesgang", fontsize=14, fontweight='bold')
+ax_dc.set_ylabel(rf"Kohlenstoffaustausch {units}")
+ax_dc.set_xlabel("Tageszeit (Stunden)")
+ax_dc.grid(True, alpha=0.2)
+
+# Translate the month legend (diive labels it in English)
+EN_TO_DE_MONTH = {'Jan': 'Jan', 'Feb': 'Feb', 'Mar': 'Mär', 'Apr': 'Apr',
+                  'May': 'Mai', 'Jun': 'Jun', 'Jul': 'Jul', 'Aug': 'Aug',
+                  'Sep': 'Sep', 'Oct': 'Okt', 'Nov': 'Nov', 'Dec': 'Dez'}
+legend = ax_dc.get_legend()
+if legend is not None:
+    for text in legend.get_texts():
+        text.set_text(EN_TO_DE_MONTH.get(text.get_text(), text.get_text()))
 
 # Add variable name in upper right corner
 fig.text(0.94, 0.96, NEE_COL, ha='right', va='top', fontsize=10,

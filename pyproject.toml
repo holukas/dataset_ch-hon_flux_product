@@ -1,24 +1,39 @@
-[tool.poetry]
+[project]
 name = "dataset-ch-hon-flux-product"
 version = "0.1.0"
 description = "Flux data processing pipeline for the CH-HON forest station"
-authors = ["Lukas Hörtnagl <lukas.hoertnagl@usys.ethz.ch>"]
+authors = [{ name = "Lukas Hörtnagl", email = "lukas.hoertnagl@usys.ethz.ch" }]
 readme = "README.md"
-packages = [{include = "src"}]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pandas>=3.0,<4.0",
+    "matplotlib>=3.10,<4.0",
+    "numpy>=2.2,<3.0",
+    "diive",
+    # yellowbrick (via diive) imports distutils, removed from the Python 3.12 stdlib;
+    # setuptools provides the compatibility shim
+    "setuptools>=70",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.11,<3.12"
-pandas = "^2.0"
-matplotlib = "^3.8"
-numpy = "^1.24"
-diive = { path = "../../21 - DIIVE/diive", develop = true }
+[dependency-groups]
+dev = [
+    "dbc-influxdb",
+    "ghp-import>=2.1.0",
+    "jupyter-book>=1.0.4.post1",
+    "sphinxcontrib-mermaid>=1.0.0",
+]
 
-[tool.poetry.group.dev.dependencies]
-dbc-influxdb = { path = "../../22 - POET/dbc-influxdb", develop = true }
-ghp-import = "^2.1.0"
-jupyter-book = "^1.0.4.post1"
-sphinxcontrib-mermaid = "^1.0.0"
+[tool.uv]
+# shap pulls in numba transitively; pin to a build that supports Python 3.12 + numpy 2.x
+constraint-dependencies = ["numba>=0.61"]
+
+[tool.uv.sources]
+diive = { path = "../../diive", editable = true }
+dbc-influxdb = { path = "../../poet/dbc-influxdb", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

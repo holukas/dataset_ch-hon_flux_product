@@ -55,7 +55,7 @@ script_id = "09"
 # Load data
 # ============================================================================
 
-filepath = DATA_OUT_DIR / FILENAME
+filepath = Path(r"F:\Sync\luhk_work\dev-data\datasets-data\dataset_ch-hon_flux_product-data\data\out") / FILENAME
 print(f"Loading: {filepath}")
 df = load_parquet(filepath=str(filepath))
 
@@ -64,7 +64,7 @@ df = load_parquet(filepath=str(filepath))
 # ============================================================================
 
 months_to_plot = [3]  # March only
-month_names = {3: "March"}
+month_names = {3: "März"}
 
 df['month'] = df.index.month
 df['year'] = df.index.year
@@ -150,11 +150,11 @@ for year in years:
         ax_nee.fill_between(day_frac, nee_cum, alpha=0.15, color=color)
 
 ax_nee.axhline(0, color=DARK_COLOR, linewidth=1, alpha=0.5, linestyle='-', zorder=5)
-ax_nee.set_title(r"March Cumulative NEE Comparison (3 Years)", fontsize=14, fontweight='bold')
-ax_nee.set_xlabel("Day of March")
-ax_nee.set_ylabel(r"Cumulative NEE (g C m$^{-2}$)")
+ax_nee.set_title(r"Kumulativer C-Austausch im März – Vergleich (3 Jahre)", fontsize=14, fontweight='bold')
+ax_nee.set_xlabel("Tag im März")
+ax_nee.set_ylabel(r"Kumulativ (g C m$^{-2}$)")
 ax_nee.grid(True, alpha=0.2)
-ax_nee.legend(title="Year", loc='upper left', fontsize=10)
+ax_nee.legend(title="Jahr", loc='upper left', fontsize=10)
 
 # Set axis limits
 all_days_nee = []
@@ -189,11 +189,11 @@ for year in years:
         ax_et.fill_between(day_frac, et_cum, alpha=0.15, color=color)
 
 ax_et.axhline(0, color=DARK_COLOR, linewidth=1, alpha=0.5, linestyle='-', zorder=5)
-ax_et.set_title(r"March Cumulative ET Comparison (3 Years)", fontsize=14, fontweight='bold')
-ax_et.set_xlabel("Day of March")
-ax_et.set_ylabel(r"Cumulative ET (mm)")
+ax_et.set_title(r"Kumulativer Wasseraustausch im März – Vergleich (3 Jahre)", fontsize=14, fontweight='bold')
+ax_et.set_xlabel("Tag im März")
+ax_et.set_ylabel(r"Kumulativ (mm)")
 ax_et.grid(True, alpha=0.2)
-ax_et.legend(title="Year", loc='upper left', fontsize=10)
+ax_et.legend(title="Jahr", loc='upper left', fontsize=10)
 
 # Set axis limits
 all_days_et = []

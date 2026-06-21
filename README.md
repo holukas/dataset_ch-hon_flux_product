@@ -101,10 +101,12 @@ The station is a test plantation comparing 8 tree species from multiple geograph
 
 ## Dependencies
 
-Managed with [Poetry](https://python-poetry.org/). Install environment:
+Managed with [uv](https://docs.astral.sh/uv/) (Python 3.12). Install environment:
 
 ```bash
-poetry install
+uv sync
 ```
+
+Run scripts inside the environment with `uv run`, e.g. `uv run python src/07_plot_NEE.py`.
 
 Primary libraries: [`diive`](https://github.com/holukas/diive) · `pandas` · `matplotlib` · `numpy`

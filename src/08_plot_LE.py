@@ -54,7 +54,7 @@ script_id = "08"
 # Load data
 # ============================================================================
 
-filepath = DATA_OUT_DIR / FILENAME
+filepath = Path(r"F:\Sync\luhk_work\dev-data\datasets-data\dataset_ch-hon_flux_product-data\data\out") / FILENAME
 print(f"Loading: {filepath}")
 df = load_parquet(filepath=str(filepath))
 
@@ -90,11 +90,15 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), gridspec_kw={'height_rati
 years = et_mm.index.year.unique()
 year_starts = [pd.Timestamp(year, 1, 1) for year in years if pd.Timestamp(year, 1, 1) >= et_mm.index[0]]
 
+# German month abbreviations (avoids relying on system locale)
+MONTHS_DE = {1: 'Jan', 2: 'Feb', 3: 'Mär', 4: 'Apr', 5: 'Mai', 6: 'Jun',
+             7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Dez'}
 
-# Custom date formatter: show all months as Jan Feb Mar etc
+
+# Custom date formatter: show all months as Jan Feb Mär etc
 def date_formatter(x, pos):
     d = mdates.num2date(x)
-    return d.strftime('%b')
+    return MONTHS_DE[d.month]
 
 
 # Top: Time series (mm)
@@ -103,8 +107,8 @@ ax1.fill_between(et_mm.index, et_mm, alpha=0.15, color='#0d6efd')
 ax1.axhline(0, color='#212529', linewidth=1, alpha=0.5, linestyle='-', zorder=5)
 for year_start in year_starts:
     ax1.axvline(year_start, color='#6c757d', linewidth=1, alpha=0.4, linestyle='--', zorder=2)
-ax1.set_title(r"LE Time Series (mm 30min$^{-1}$)", fontsize=14, fontweight='bold')
-ax1.set_ylabel(r"ET (mm 30min$^{-1}$)")
+ax1.set_title(r"Halbstündlicher Wasseraustausch", fontsize=14, fontweight='bold')
+ax1.set_ylabel(r"Evapotranspiration (mm 30min$^{-1}$)")
 ax1.grid(True, alpha=0.2)
 
 # Format x-axis for top panel (same as bottom)
@@ -153,17 +157,17 @@ for year in years_unique:
 
         year_days = (year_data.index[-1] - year_data.index[0]).days + 1
         year_avg = year_total / year_days if year_days > 0 else 0
-        yearly_text += f"{year}: {year_total:.0f} ({year_days} days, {year_avg:.1f} mm/day)\n"
+        yearly_text += f"{year}: {year_total:.0f} ({year_days} Tage, {year_avg:.1f} mm/Tag)\n"
 
 # Display total and yearly info
-textstr = f'Total: {total_et:.0f} mm ({total_days} days, {total_avg:.1f} mm/day)\n\n{yearly_text}'
+textstr = f'Gesamt: {total_et:.0f} mm ({total_days} Tage, {total_avg:.1f} mm/Tag)\n\n{yearly_text}'
 ax2.text(0.05, 0.92, textstr, transform=ax2.transAxes, fontsize=11, fontweight='bold',
          verticalalignment='top', horizontalalignment='left',
          color='#0c63e4', alpha=0.95, family='monospace',
          bbox=dict(boxstyle='round,pad=0.8', facecolor='#ffffff', alpha=0.05, edgecolor='none'))
 
-ax2.set_title(r"Cumulative LE (mm)", fontsize=14, fontweight='bold')
-ax2.set_ylabel(r"Cumulative ET (mm)")
+ax2.set_title(r"Kumulativer Wasseraustausch", fontsize=14, fontweight='bold')
+ax2.set_ylabel(r"Kumulativ (mm)")
 ax2.grid(True, alpha=0.2)
 
 # Y-axis: start at zero
@@ -176,7 +180,7 @@ def year_formatter(x, pos):
     if d.month == 1:
         return f'{d.year}'
     else:
-        return d.strftime('%b')
+        return MONTHS_DE[d.month]
 
 
 # Improve date formatting on x-axis
@@ -225,9 +229,21 @@ ax_dc = fig.add_subplot(gs[0, 0])
 # Plot diel cycle for LE
 dc_le = DielCycle(series=et_mm)
 units = r'(mm 30min$^{-1}$)'
-dc_le.plot(ax=ax_dc, title=f"Mean Diel Cycle", txt_ylabel_units=units,
-           each_month=True, legend_n_col=4, ylabel=r"Mean ET",
-           showgrid=True, show_xticklabels=True, show_xlabel=True)
+dc_le.plot(ax=ax_dc, each_month=True,
+           show_xticklabels=True, show_xlabel=True)
+ax_dc.set_title("Mittlerer Tagesgang", fontsize=14, fontweight='bold')
+ax_dc.set_ylabel(rf"Wasseraustausch {units}")
+ax_dc.set_xlabel("Tageszeit (Stunden)")
+ax_dc.grid(True, alpha=0.2)
+
+# Translate the month legend (diive labels it in English)
+EN_TO_DE_MONTH = {'Jan': 'Jan', 'Feb': 'Feb', 'Mar': 'Mär', 'Apr': 'Apr',
+                  'May': 'Mai', 'Jun': 'Jun', 'Jul': 'Jul', 'Aug': 'Aug',
+                  'Sep': 'Sep', 'Oct': 'Okt', 'Nov': 'Nov', 'Dec': 'Dez'}
+legend = ax_dc.get_legend()
+if legend is not None:
+    for text in legend.get_texts():
+        text.set_text(EN_TO_DE_MONTH.get(text.get_text(), text.get_text()))
 
 # Add variable name in upper right corner
 fig.text(0.94, 0.96, LE_COL, ha='right', va='top', fontsize=10,
@@ -236,6 +252,8 @@ fig.text(0.94, 0.96, LE_COL, ha='right', va='top', fontsize=10,
 # Remove ticks on secondary (right and top) spines
 ax_dc.tick_params(axis='x', which='both', top=False)
 ax_dc.tick_params(axis='y', which='both', right=False)
+
+ax_dc.set_ylim(0)
 
 plt.tight_layout()
 outfile_dc = DATA_OUT_DIR / f"08_LE_DielCycle_{et_mm.index[0].date()}_{et_mm.index[-1].date()}.png"
