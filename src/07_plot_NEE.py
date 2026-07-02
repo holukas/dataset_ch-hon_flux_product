@@ -1,5 +1,5 @@
 """
-Plot NEE time series and cumulative flux in g C m-2 30min-1
+Plot NEE daily-mean time series and cumulative flux in g CO2 m-2 30min-1
 """
 
 import importlib.metadata
@@ -7,12 +7,10 @@ import warnings
 from pathlib import Path
 
 import matplotlib.dates as mdates
-import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 from diive.core.io.files import load_parquet
-from diive.core.plotting.dielcycle import DielCycle
 
 warnings.filterwarnings('ignore')
 version_diive = importlib.metadata.version("diive")
@@ -20,6 +18,10 @@ print(f"diive version: v{version_diive}")
 
 # Apply modern plot style
 plt.style.use('seaborn-v0_8-darkgrid')
+# Single font family and size for all text elements
+FONT_FAMILY = 'sans-serif'
+FONT_SIZE = 13
+
 plt.rcParams.update({
     'figure.facecolor': '#ffffff',
     'axes.facecolor': '#ffffff',
@@ -28,6 +30,14 @@ plt.rcParams.update({
     'axes.spines.bottom': True,
     'axes.spines.right': False,
     'axes.spines.top': False,
+    'font.family': FONT_FAMILY,
+    'font.size': FONT_SIZE,
+    'axes.titlesize': FONT_SIZE,
+    'axes.labelsize': FONT_SIZE,
+    'xtick.labelsize': FONT_SIZE,
+    'ytick.labelsize': FONT_SIZE,
+    'legend.fontsize': FONT_SIZE,
+    'figure.titlesize': FONT_SIZE,
 })
 
 # ============================================================================
@@ -40,11 +50,11 @@ DATA_OUT_DIR = SCRIPT_DIR.parent / "data" / "out"
 FILENAME = "06_L4.1_FLUXES_MERGED.parquet"
 NEE_COL = "NEE_L3.1_L3.3_CUT_50_QCF_gfXG"
 
-# Unit conversion: umol CO2 m-2 s-1 to g C m-2 30min-1
+# Unit conversion: umol CO2 m-2 s-1 to g CO2 m-2 30min-1 (CO2 mass, no C conversion)
 # For 30-minute flux data:
-# = umol to min (x60) to 30min (x30) to ug CO2 (x44.0095) to g (x10-6) to g C (x12/44)
-# = 60 x 30 x 44.0095 x 10-6 x (12/44) = 0.02161926
-UMOL_TO_G_C_30MIN = 0.02161926
+# = umol to min (x60) to 30min (x30) to ug CO2 (x44.0095) to g (x10-6)
+# = 60 x 30 x 44.0095 x 10-6 = 0.0792171
+UMOL_TO_G_CO2_30MIN = 0.0792171
 
 script_id = "07"
 
@@ -67,16 +77,16 @@ print(f"Valid data points: {nee_umol.notna().sum()} / {len(nee_umol)}")
 print(f"Mean: {nee_umol.mean():.3f}")
 print(f"Std: {nee_umol.std():.3f}")
 
-# Convert to g C m-2 30min-1
-nee_gc = nee_umol * UMOL_TO_G_C_30MIN
-print(f"\nConverted units: g C m-2 30min-1")
-print(f"Mean: {nee_gc.mean():.6f}")
-print(f"Std: {nee_gc.std():.6f}")
+# Convert to g CO2 m-2 30min-1
+nee_co2 = nee_umol * UMOL_TO_G_CO2_30MIN
+print(f"\nConverted units: g CO2 m-2 30min-1")
+print(f"Mean: {nee_co2.mean():.6f}")
+print(f"Std: {nee_co2.std():.6f}")
 
 # Calculate cumulative flux (replacing NaN with 0 for accumulation)
-nee_gc_filled = nee_gc.fillna(0)
-nee_cumulative = nee_gc_filled.cumsum()
-print(f"Cumulative range: {nee_cumulative.min():.3f} to {nee_cumulative.max():.3f} g C m-2")
+nee_co2_filled = nee_co2.fillna(0)
+nee_cumulative = nee_co2_filled.cumsum()
+print(f"Cumulative range: {nee_cumulative.min():.3f} to {nee_cumulative.max():.3f} g CO2 m-2")
 
 # ============================================================================
 # Plot
@@ -85,8 +95,8 @@ print(f"Cumulative range: {nee_cumulative.min():.3f} to {nee_cumulative.max():.3
 fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), gridspec_kw={'height_ratios': [1, 1]})
 
 # Get year boundaries for vertical lines
-years = nee_gc.index.year.unique()
-year_starts = [pd.Timestamp(year, 1, 1) for year in years if pd.Timestamp(year, 1, 1) >= nee_gc.index[0]]
+years = nee_co2.index.year.unique()
+year_starts = [pd.Timestamp(year, 1, 1) for year in years if pd.Timestamp(year, 1, 1) >= nee_co2.index[0]]
 
 
 # German month abbreviations (avoids relying on system locale)
@@ -100,15 +110,29 @@ def date_formatter(x, pos):
     return MONTHS_DE[d.month]
 
 
-# Top: Time series (g C)
-ax1.plot(nee_gc.index, nee_gc, alpha=0.8, c='#388E3C', linewidth=0.7)
-ax1.fill_between(nee_gc.index, nee_gc, alpha=0.15, color='#388E3C')
+# Top: Half-hourly time series as a line (g CO2 m-2 30min-1)
+ax1.plot(nee_co2.index, nee_co2, color='#388E3C', alpha=0.8, linewidth=0.7)
 ax1.axhline(0, color='#212529', linewidth=1, alpha=0.5, linestyle='-', zorder=5)
 for year_start in year_starts:
     ax1.axvline(year_start, color='#6c757d', linewidth=1, alpha=0.4, linestyle='--', zorder=2)
-ax1.set_title(r"Halbstündlicher Kohlenstoffaustausch", fontsize=14, fontweight='bold')
-ax1.set_ylabel(r"NEE (g C m$^{-2}$ 30min$^{-1}$)")
+ax1.text(0.01, 0.97, r"Halbstündlicher CO$_2$-Austausch", transform=ax1.transAxes,
+         ha='left', va='top', fontweight='bold',
+         bbox=dict(boxstyle='round,pad=0.3', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
+ax1.set_ylabel(r"CO$_2$-Austausch (g CO$_2$ m$^{-2}$ 30min$^{-1}$)")
 ax1.grid(True, alpha=0.2)
+
+# Direction hints: positive NEE = release, negative NEE = uptake (right edge)
+ARROW_COLOR = '#495057'
+ax1.annotate('', xy=(0.985, 0.95), xytext=(0.985, 0.62), xycoords='axes fraction',
+             arrowprops=dict(arrowstyle='-|>', color=ARROW_COLOR, lw=1.6))
+ax1.text(0.955, 0.785, 'CO$_2$-Abgabe', transform=ax1.transAxes, rotation=90,
+         ha='right', va='center', color=ARROW_COLOR, fontweight='bold',
+         bbox=dict(boxstyle='round,pad=0.2', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
+ax1.annotate('', xy=(0.985, 0.05), xytext=(0.985, 0.38), xycoords='axes fraction',
+             arrowprops=dict(arrowstyle='-|>', color=ARROW_COLOR, lw=1.6))
+ax1.text(0.955, 0.215, 'CO$_2$-Aufnahme', transform=ax1.transAxes, rotation=90,
+         ha='right', va='center', color=ARROW_COLOR, fontweight='bold',
+         bbox=dict(boxstyle='round,pad=0.2', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
 
 # Format x-axis for top panel (same as bottom)
 ax1.xaxis.set_major_locator(mdates.MonthLocator())
@@ -156,17 +180,19 @@ for year in years_unique:
 
         year_days = (year_data.index[-1] - year_data.index[0]).days + 1
         year_avg = year_total / year_days if year_days > 0 else 0
-        yearly_text += f"{year}: {year_total:.0f} ({year_days} Tage, {year_avg:.1f} g C/Tag)\n"
+        yearly_text += f"{year}: {year_total:.0f} ({year_days} Tage, {year_avg:.1f} g CO$_2$/Tag)\n"
 
 # Display total and yearly info
-textstr = f'Gesamt: {total_nee:.0f} g C m$^{{-2}}$ ({total_days} Tage, {total_avg:.1f} g C/Tag)\n\n{yearly_text}'
-ax2.text(0.05, 0.92, textstr, transform=ax2.transAxes, fontsize=11, fontweight='bold',
+textstr = f'Gesamt: {total_nee:.0f} g CO$_2$ m$^{{-2}}$ ({total_days} Tage, {total_avg:.1f} g CO$_2$/Tag)\n\n{yearly_text}'
+ax2.text(0.05, 0.82, textstr, transform=ax2.transAxes, fontweight='bold',
          verticalalignment='top', horizontalalignment='left',
-         color='#1b5e20', alpha=0.95, family='monospace',
+         color='#1b5e20', alpha=0.95,
          bbox=dict(boxstyle='round,pad=0.8', facecolor='#ffffff', alpha=0.05, edgecolor='none'))
 
-ax2.set_title(r"Kumulativer Kohlenstoffaustausch", fontsize=14, fontweight='bold')
-ax2.set_ylabel(r"Kumulativ (g C m$^{-2}$)")
+ax2.text(0.01, 0.97, r"Kumulativer CO$_2$-Austausch", transform=ax2.transAxes,
+         ha='left', va='top', fontweight='bold',
+         bbox=dict(boxstyle='round,pad=0.3', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
+ax2.set_ylabel(r"Kumulativ (g CO$_2$ m$^{-2}$)")
 ax2.grid(True, alpha=0.2)
 
 # Y-axis: start at zero
@@ -193,7 +219,7 @@ ax2.tick_params(axis='y', which='major', length=5, width=0.8)
 ax2.tick_params(axis='both', which='major', pad=5)
 
 # Format x-axis labels (no rotation)
-plt.setp(ax2.xaxis.get_majorticklabels(), fontsize=9, ha='center')
+plt.setp(ax2.xaxis.get_majorticklabels(), ha='center')
 
 # Show spines
 ax2.spines['left'].set_visible(True)
@@ -206,55 +232,12 @@ ax2.spines['left'].set_color('#212529')
 ax2.spines['bottom'].set_color('#212529')
 
 # Remove whitespace by setting x-axis limits to data range
-ax1.set_xlim(nee_gc.index[0], nee_gc.index[-1])
+ax1.set_xlim(nee_co2.index[0], nee_co2.index[-1])
 ax2.set_xlim(nee_cumulative.index[0], nee_cumulative.index[-1])
 
 plt.tight_layout()
-outfile = DATA_OUT_DIR / f"07_NEE_timeseries_{nee_gc.index[0].date()}_{nee_gc.index[-1].date()}.png"
+outfile = DATA_OUT_DIR / f"07_NEE_timeseries_{nee_co2.index[0].date()}_{nee_co2.index[-1].date()}.png"
 fig.savefig(outfile, dpi=150, bbox_inches='tight')
 print(f"\nSaved: {outfile}")
-
-fig.show()
-
-# ============================================================================
-# Diel Cycle Analysis
-# ============================================================================
-
-fig = plt.figure(facecolor='#ffffff', figsize=(14, 10), dpi=150)
-gs = gridspec.GridSpec(1, 1)
-gs.update(wspace=0.3, hspace=0.3, left=0.08, right=0.95, top=0.95, bottom=0.08)
-ax_dc = fig.add_subplot(gs[0, 0])
-
-# Plot diel cycle for NEE
-dc_nee = DielCycle(series=nee_gc)
-units = r'(g C m$^{-2}$ 30min$^{-1}$)'
-dc_nee.plot(ax=ax_dc, each_month=True,
-            show_xticklabels=True, show_xlabel=True)
-ax_dc.set_title("Mittlerer Tagesgang", fontsize=14, fontweight='bold')
-ax_dc.set_ylabel(rf"Kohlenstoffaustausch {units}")
-ax_dc.set_xlabel("Tageszeit (Stunden)")
-ax_dc.grid(True, alpha=0.2)
-
-# Translate the month legend (diive labels it in English)
-EN_TO_DE_MONTH = {'Jan': 'Jan', 'Feb': 'Feb', 'Mar': 'Mär', 'Apr': 'Apr',
-                  'May': 'Mai', 'Jun': 'Jun', 'Jul': 'Jul', 'Aug': 'Aug',
-                  'Sep': 'Sep', 'Oct': 'Okt', 'Nov': 'Nov', 'Dec': 'Dez'}
-legend = ax_dc.get_legend()
-if legend is not None:
-    for text in legend.get_texts():
-        text.set_text(EN_TO_DE_MONTH.get(text.get_text(), text.get_text()))
-
-# Add variable name in upper right corner
-fig.text(0.94, 0.96, NEE_COL, ha='right', va='top', fontsize=10,
-         style='italic', color='#6c757d', weight='normal')
-
-# Remove ticks on secondary (right and top) spines
-ax_dc.tick_params(axis='x', which='both', top=False)
-ax_dc.tick_params(axis='y', which='both', right=False)
-
-plt.tight_layout()
-outfile_dc = DATA_OUT_DIR / f"07_NEE_DielCycle_{nee_gc.index[0].date()}_{nee_gc.index[-1].date()}.png"
-fig.savefig(outfile_dc, dpi=150, bbox_inches='tight')
-print(f"Saved: {outfile_dc}")
 
 fig.show()
