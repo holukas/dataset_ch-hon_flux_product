@@ -1,16 +1,13 @@
 """
-Plot LE (latent heat flux) as evapotranspiration (ET) in mm 30min-1
+Plot LE (latent heat flux) mean diel cycle (per month) as evapotranspiration (ET) in mm 30min-1
 """
 
 import importlib.metadata
 import warnings
 from pathlib import Path
 
-import matplotlib.dates as mdates
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-import pandas as pd
 from diive.core.io.files import load_parquet
 from diive.core.plotting.dielcycle import DielCycle
 
@@ -20,6 +17,10 @@ print(f"diive version: v{version_diive}")
 
 # Apply modern plot style
 plt.style.use('seaborn-v0_8-darkgrid')
+# Single font family and size for all text elements
+FONT_FAMILY = 'sans-serif'
+FONT_SIZE = 15
+
 plt.rcParams.update({
     'figure.facecolor': '#ffffff',
     'axes.facecolor': '#ffffff',
@@ -28,6 +29,14 @@ plt.rcParams.update({
     'axes.spines.bottom': True,
     'axes.spines.right': False,
     'axes.spines.top': False,
+    'font.family': FONT_FAMILY,
+    'font.size': FONT_SIZE,
+    'axes.titlesize': FONT_SIZE,
+    'axes.labelsize': FONT_SIZE,
+    'xtick.labelsize': FONT_SIZE,
+    'ytick.labelsize': FONT_SIZE,
+    'legend.fontsize': FONT_SIZE,
+    'figure.titlesize': FONT_SIZE,
 })
 
 # ============================================================================
@@ -41,11 +50,10 @@ FILENAME = "06_L4.1_FLUXES_MERGED.parquet"
 LE_COL = "LE_L3.1_L3.3_CUT_NONE_QCF_gfXG"
 
 # Unit conversion: W m-2 to mm 30min-1 (evapotranspiration)
-# ET (mm) = LE (W m-2) x time (s) / (lambda (J/kg) x rho (kg/m3))
-# lambda = 2.45 MJ/kg (latent heat of vaporization)
-# rho = 1000 kg/m3 (water density)
-# 30 min = 1800 seconds
-# = 1800 / (2.45e6 × 1000) = 7.3469e-4 mm/W
+# ET depth = LE (W m-2) x time (s) / (lambda (J/kg) x rho (kg/m3)), then m -> mm (x1000).
+# rho = 1000 kg/m3 cancels the m->mm factor (1 kg/m2 of water = 1 mm), so:
+# ET (mm) = LE x time / lambda,  lambda = 2.45 MJ/kg, time = 1800 s (30 min)
+# = 1800 / 2.45e6 = 7.3469e-4 mm per (W m-2)
 LE_TO_ET_30MIN = 7.3469e-4
 
 script_id = "09"
@@ -66,156 +74,12 @@ print(f"\nExtracting column: {LE_COL}")
 le_wm2 = df[LE_COL].copy()
 print(f"Original units: W m-2")
 print(f"Valid data points: {le_wm2.notna().sum()} / {len(le_wm2)}")
-print(f"Mean: {le_wm2.mean():.3f}")
-print(f"Std: {le_wm2.std():.3f}")
 
 # Convert to ET mm 30min-1
 et_mm = le_wm2 * LE_TO_ET_30MIN
 print(f"\nConverted units: mm 30min-1 (evapotranspiration)")
 print(f"Mean: {et_mm.mean():.6f}")
 print(f"Std: {et_mm.std():.6f}")
-
-# Calculate cumulative ET (replacing NaN with 0 for accumulation)
-et_mm_filled = et_mm.fillna(0)
-et_cumulative = et_mm_filled.cumsum()
-print(f"Cumulative range: {et_cumulative.min():.3f} to {et_cumulative.max():.3f} mm")
-
-# ============================================================================
-# Plot
-# ============================================================================
-
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 10), gridspec_kw={'height_ratios': [1, 1]})
-
-# Get year boundaries for vertical lines
-years = et_mm.index.year.unique()
-year_starts = [pd.Timestamp(year, 1, 1) for year in years if pd.Timestamp(year, 1, 1) >= et_mm.index[0]]
-
-# German month abbreviations (avoids relying on system locale)
-MONTHS_DE = {1: 'Jan', 2: 'Feb', 3: 'Mär', 4: 'Apr', 5: 'Mai', 6: 'Jun',
-             7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Dez'}
-
-
-# Custom date formatter: show all months as Jan Feb Mär etc
-def date_formatter(x, pos):
-    d = mdates.num2date(x)
-    return MONTHS_DE[d.month]
-
-
-# Top: Time series (mm)
-ax1.plot(et_mm.index, et_mm, alpha=0.8, c='#0d6efd', linewidth=0.7)
-ax1.fill_between(et_mm.index, et_mm, alpha=0.15, color='#0d6efd')
-ax1.axhline(0, color='#212529', linewidth=1, alpha=0.5, linestyle='-', zorder=5)
-for year_start in year_starts:
-    ax1.axvline(year_start, color='#6c757d', linewidth=1, alpha=0.4, linestyle='--', zorder=2)
-ax1.set_title(r"Halbstündlicher Wasseraustausch", fontsize=14, fontweight='bold')
-ax1.set_ylabel(r"Evapotranspiration (mm 30min$^{-1}$)")
-ax1.grid(True, alpha=0.2)
-
-# Format x-axis for top panel (same as bottom)
-ax1.xaxis.set_major_locator(mdates.MonthLocator())
-ax1.xaxis.set_major_formatter(ticker.FuncFormatter(date_formatter))
-ax1.tick_params(axis='x', which='major', length=6, width=1.0, labelbottom=False)
-ax1.tick_params(axis='y', which='major', length=5, width=0.8)
-ax1.tick_params(axis='both', which='major', pad=5)
-
-# Show spines
-ax1.spines['left'].set_visible(True)
-ax1.spines['bottom'].set_visible(True)
-ax1.spines['right'].set_visible(False)
-ax1.spines['top'].set_visible(False)
-ax1.spines['left'].set_linewidth(1.0)
-ax1.spines['bottom'].set_linewidth(1.0)
-ax1.spines['left'].set_color('#212529')
-ax1.spines['bottom'].set_color('#212529')
-
-# Bottom: Cumulative curve
-ax2.plot(et_cumulative.index, et_cumulative, alpha=0.85, c='#0d6efd', linewidth=1.2)
-ax2.fill_between(et_cumulative.index, et_cumulative, alpha=0.15, color='#0d6efd')
-ax2.axhline(0, color='#212529', linewidth=1, alpha=0.5, linestyle='-', zorder=5)
-for year_start in year_starts:
-    ax2.axvline(year_start, color='#6c757d', linewidth=1, alpha=0.4, linestyle='--', zorder=2)
-
-# Calculate total and yearly statistics
-total_et = et_cumulative.iloc[-1]
-total_days = (et_cumulative.index[-1] - et_cumulative.index[0]).days + 1
-total_avg = total_et / total_days if total_days > 0 else 0
-
-# Calculate per-year totals and days
-years_unique = sorted(et_cumulative.index.year.unique())
-yearly_text = ""
-for year in years_unique:
-    year_data = et_cumulative[et_cumulative.index.year == year]
-    if len(year_data) > 0:
-        year_total = year_data.iloc[-1] - (year_data.iloc[0] if len(year_data) > 1 else 0)
-        if year == years_unique[0]:
-            # First year: total is just the last value
-            year_total = year_data.iloc[-1]
-        else:
-            # Subsequent years: difference from previous year
-            prev_year_data = et_cumulative[et_cumulative.index.year == year - 1]
-            year_total = year_data.iloc[-1] - prev_year_data.iloc[-1]
-
-        year_days = (year_data.index[-1] - year_data.index[0]).days + 1
-        year_avg = year_total / year_days if year_days > 0 else 0
-        yearly_text += f"{year}: {year_total:.0f} ({year_days} Tage, {year_avg:.1f} mm/Tag)\n"
-
-# Display total and yearly info
-textstr = f'Gesamt: {total_et:.0f} mm ({total_days} Tage, {total_avg:.1f} mm/Tag)\n\n{yearly_text}'
-ax2.text(0.05, 0.92, textstr, transform=ax2.transAxes, fontsize=11, fontweight='bold',
-         verticalalignment='top', horizontalalignment='left',
-         color='#0c63e4', alpha=0.95, family='monospace',
-         bbox=dict(boxstyle='round,pad=0.8', facecolor='#ffffff', alpha=0.05, edgecolor='none'))
-
-ax2.set_title(r"Kumulativer Wasseraustausch", fontsize=14, fontweight='bold')
-ax2.set_ylabel(r"Kumulativ (mm)")
-ax2.grid(True, alpha=0.2)
-
-# Y-axis: start at zero
-ax2.set_ylim(bottom=0)
-
-
-# Date formatter for bottom panel: show year at January, months otherwise
-def year_formatter(x, pos):
-    d = mdates.num2date(x)
-    if d.month == 1:
-        return f'{d.year}'
-    else:
-        return MONTHS_DE[d.month]
-
-
-# Improve date formatting on x-axis
-ax2.xaxis.set_major_locator(mdates.MonthLocator())  # Major ticks every month
-ax2.xaxis.set_major_formatter(ticker.FuncFormatter(year_formatter))  # Apply year formatter
-ax2.xaxis.set_minor_locator(mdates.MonthLocator())  # Minor ticks every month (same for visibility)
-
-# Show tick marks on all months
-ax2.tick_params(axis='x', which='major', length=6, width=1.0)
-ax2.tick_params(axis='y', which='major', length=5, width=0.8)
-ax2.tick_params(axis='both', which='major', pad=5)
-
-# Format x-axis labels (no rotation)
-plt.setp(ax2.xaxis.get_majorticklabels(), fontsize=9, ha='center')
-
-# Show spines
-ax2.spines['left'].set_visible(True)
-ax2.spines['bottom'].set_visible(True)
-ax2.spines['right'].set_visible(False)
-ax2.spines['top'].set_visible(False)
-ax2.spines['left'].set_linewidth(1.0)
-ax2.spines['bottom'].set_linewidth(1.0)
-ax2.spines['left'].set_color('#212529')
-ax2.spines['bottom'].set_color('#212529')
-
-# Remove whitespace by setting x-axis limits to data range
-ax1.set_xlim(et_mm.index[0], et_mm.index[-1])
-ax2.set_xlim(et_cumulative.index[0], et_cumulative.index[-1])
-
-plt.tight_layout()
-outfile = DATA_OUT_DIR / f"09_LE_timeseries_{et_mm.index[0].date()}_{et_mm.index[-1].date()}.png"
-fig.savefig(outfile, dpi=150, bbox_inches='tight')
-print(f"\nSaved: {outfile}")
-
-fig.show()
 
 # ============================================================================
 # Diel Cycle Analysis
@@ -231,10 +95,13 @@ dc_le = DielCycle(series=et_mm)
 units = r'(mm 30min$^{-1}$)'
 dc_le.plot(ax=ax_dc, each_month=True,
            show_xticklabels=True, show_xlabel=True)
-ax_dc.set_title("Mittlerer Tagesgang", fontsize=14, fontweight='bold')
-ax_dc.set_ylabel(rf"Wasseraustausch {units}")
-ax_dc.set_xlabel("Tageszeit (Stunden)")
-ax_dc.grid(True, alpha=0.2)
+ax_dc.text(0.01, 0.97, "Mittlerer Wasseraustausch im Tagesverlauf", transform=ax_dc.transAxes,
+           ha='left', va='top', fontweight='bold',
+           bbox=dict(boxstyle='round,pad=0.3', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
+ax_dc.set_ylabel(rf"Wasseraustausch {units}", fontsize=FONT_SIZE)
+ax_dc.set_xlabel("Tageszeit (Stunden)", fontsize=FONT_SIZE)
+ax_dc.tick_params(axis='both', labelsize=FONT_SIZE)
+ax_dc.grid(False)
 
 # Translate the month legend (diive labels it in English)
 EN_TO_DE_MONTH = {'Jan': 'Jan', 'Feb': 'Feb', 'Mar': 'Mär', 'Apr': 'Apr',
@@ -244,10 +111,7 @@ legend = ax_dc.get_legend()
 if legend is not None:
     for text in legend.get_texts():
         text.set_text(EN_TO_DE_MONTH.get(text.get_text(), text.get_text()))
-
-# Add variable name in upper right corner
-fig.text(0.94, 0.96, LE_COL, ha='right', va='top', fontsize=10,
-         style='italic', color='#6c757d', weight='normal')
+        text.set_fontsize(FONT_SIZE)
 
 # Remove ticks on secondary (right and top) spines
 ax_dc.tick_params(axis='x', which='both', top=False)
