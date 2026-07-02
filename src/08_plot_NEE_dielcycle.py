@@ -1,5 +1,5 @@
 """
-Plot NEE mean diel cycle (per month) in g C m-2 30min-1
+Plot NEE mean diel cycle (per month) in g CO2 m-2 30min-1
 """
 
 import importlib.metadata
@@ -19,7 +19,7 @@ print(f"diive version: v{version_diive}")
 plt.style.use('seaborn-v0_8-darkgrid')
 # Single font family and size for all text elements
 FONT_FAMILY = 'sans-serif'
-FONT_SIZE = 13
+FONT_SIZE = 15
 
 plt.rcParams.update({
     'figure.facecolor': '#ffffff',
@@ -49,11 +49,11 @@ DATA_OUT_DIR = SCRIPT_DIR.parent / "data" / "out"
 FILENAME = "06_L4.1_FLUXES_MERGED.parquet"
 NEE_COL = "NEE_L3.1_L3.3_CUT_50_QCF_gfXG"
 
-# Unit conversion: umol CO2 m-2 s-1 to g C m-2 30min-1
+# Unit conversion: umol CO2 m-2 s-1 to g CO2 m-2 30min-1 (CO2 mass, no C conversion)
 # For 30-minute flux data:
-# = umol to min (x60) to 30min (x30) to ug CO2 (x44.0095) to g (x10-6) to g C (x12/44)
-# = 60 x 30 x 44.0095 x 10-6 x (12/44) = 0.02161926
-UMOL_TO_G_C_30MIN = 0.02161926
+# = umol to min (x60) to 30min (x30) to ug CO2 (x44.0095) to g (x10-6)
+# = 60 x 30 x 44.0095 x 10-6 = 0.0792171
+UMOL_TO_G_CO2_30MIN = 0.0792171
 
 script_id = "08"
 
@@ -74,11 +74,11 @@ nee_umol = df[NEE_COL].copy()
 print(f"Original units: umol m-2 s-1")
 print(f"Valid data points: {nee_umol.notna().sum()} / {len(nee_umol)}")
 
-# Convert to g C m-2 30min-1
-nee_gc = nee_umol * UMOL_TO_G_C_30MIN
-print(f"\nConverted units: g C m-2 30min-1")
-print(f"Mean: {nee_gc.mean():.6f}")
-print(f"Std: {nee_gc.std():.6f}")
+# Convert to g CO2 m-2 30min-1
+nee_co2 = nee_umol * UMOL_TO_G_CO2_30MIN
+print(f"\nConverted units: g CO2 m-2 30min-1")
+print(f"Mean: {nee_co2.mean():.6f}")
+print(f"Std: {nee_co2.std():.6f}")
 
 # ============================================================================
 # Diel Cycle Analysis
@@ -90,14 +90,30 @@ gs.update(wspace=0.3, hspace=0.3, left=0.08, right=0.95, top=0.95, bottom=0.08)
 ax_dc = fig.add_subplot(gs[0, 0])
 
 # Plot diel cycle for NEE
-dc_nee = DielCycle(series=nee_gc)
-units = r'(g C m$^{-2}$ 30min$^{-1}$)'
+dc_nee = DielCycle(series=nee_co2)
+units = r'(g CO$_2$ m$^{-2}$ 30min$^{-1}$)'
 dc_nee.plot(ax=ax_dc, each_month=True,
             show_xticklabels=True, show_xlabel=True)
-ax_dc.set_title("Mittlerer Tagesgang", fontweight='bold')
-ax_dc.set_ylabel(rf"Kohlenstoffaustausch {units}")
-ax_dc.set_xlabel("Tageszeit (Stunden)")
-ax_dc.grid(True, alpha=0.2)
+ax_dc.text(0.01, 0.97, r"Mittlerer CO$_2$-Austausch im Tagesverlauf", transform=ax_dc.transAxes,
+           ha='left', va='top', fontweight='bold',
+           bbox=dict(boxstyle='round,pad=0.3', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
+ax_dc.set_ylabel(rf"CO$_2$-Austausch {units}", fontsize=FONT_SIZE)
+ax_dc.set_xlabel("Tageszeit (Stunden)", fontsize=FONT_SIZE)
+ax_dc.tick_params(axis='both', labelsize=FONT_SIZE)
+ax_dc.grid(False)
+
+# Direction hints: positive NEE = release, negative NEE = uptake (right edge)
+ARROW_COLOR = '#495057'
+ax_dc.annotate('', xy=(0.985, 0.95), xytext=(0.985, 0.87), xycoords='axes fraction',
+               arrowprops=dict(arrowstyle='-|>', color=ARROW_COLOR, lw=1.6))
+ax_dc.text(0.965, 0.91, 'CO$_2$-Quelle', transform=ax_dc.transAxes,
+           ha='right', va='center', color=ARROW_COLOR, fontweight='bold',
+           bbox=dict(boxstyle='round,pad=0.2', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
+ax_dc.annotate('', xy=(0.985, 0.05), xytext=(0.985, 0.13), xycoords='axes fraction',
+               arrowprops=dict(arrowstyle='-|>', color=ARROW_COLOR, lw=1.6))
+ax_dc.text(0.965, 0.09, 'CO$_2$-Senke', transform=ax_dc.transAxes,
+           ha='right', va='center', color=ARROW_COLOR, fontweight='bold',
+           bbox=dict(boxstyle='round,pad=0.2', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
 
 # Translate the month legend (diive labels it in English)
 EN_TO_DE_MONTH = {'Jan': 'Jan', 'Feb': 'Feb', 'Mar': 'Mär', 'Apr': 'Apr',
@@ -107,17 +123,14 @@ legend = ax_dc.get_legend()
 if legend is not None:
     for text in legend.get_texts():
         text.set_text(EN_TO_DE_MONTH.get(text.get_text(), text.get_text()))
-
-# Add variable name in upper right corner
-fig.text(0.94, 0.96, NEE_COL, ha='right', va='top',
-         style='italic', color='#6c757d', weight='normal')
+        text.set_fontsize(FONT_SIZE)
 
 # Remove ticks on secondary (right and top) spines
 ax_dc.tick_params(axis='x', which='both', top=False)
 ax_dc.tick_params(axis='y', which='both', right=False)
 
 plt.tight_layout()
-outfile_dc = DATA_OUT_DIR / f"08_NEE_DielCycle_{nee_gc.index[0].date()}_{nee_gc.index[-1].date()}.png"
+outfile_dc = DATA_OUT_DIR / f"08_NEE_DielCycle_{nee_co2.index[0].date()}_{nee_co2.index[-1].date()}.png"
 fig.savefig(outfile_dc, dpi=150, bbox_inches='tight')
 print(f"Saved: {outfile_dc}")
 

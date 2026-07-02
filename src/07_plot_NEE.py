@@ -20,7 +20,7 @@ print(f"diive version: v{version_diive}")
 plt.style.use('seaborn-v0_8-darkgrid')
 # Single font family and size for all text elements
 FONT_FAMILY = 'sans-serif'
-FONT_SIZE = 13
+FONT_SIZE = 15
 
 plt.rcParams.update({
     'figure.facecolor': '#ffffff',
@@ -123,14 +123,14 @@ ax1.grid(True, alpha=0.2)
 
 # Direction hints: positive NEE = release, negative NEE = uptake (right edge)
 ARROW_COLOR = '#495057'
-ax1.annotate('', xy=(0.985, 0.95), xytext=(0.985, 0.62), xycoords='axes fraction',
+ax1.annotate('', xy=(0.985, 0.93), xytext=(0.985, 0.80), xycoords='axes fraction',
              arrowprops=dict(arrowstyle='-|>', color=ARROW_COLOR, lw=1.6))
-ax1.text(0.955, 0.785, 'CO$_2$-Abgabe', transform=ax1.transAxes, rotation=90,
+ax1.text(0.965, 0.865, 'CO$_2$-Quelle', transform=ax1.transAxes,
          ha='right', va='center', color=ARROW_COLOR, fontweight='bold',
          bbox=dict(boxstyle='round,pad=0.2', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
-ax1.annotate('', xy=(0.985, 0.05), xytext=(0.985, 0.38), xycoords='axes fraction',
+ax1.annotate('', xy=(0.985, 0.07), xytext=(0.985, 0.20), xycoords='axes fraction',
              arrowprops=dict(arrowstyle='-|>', color=ARROW_COLOR, lw=1.6))
-ax1.text(0.955, 0.215, 'CO$_2$-Aufnahme', transform=ax1.transAxes, rotation=90,
+ax1.text(0.965, 0.135, 'CO$_2$-Senke', transform=ax1.transAxes,
          ha='right', va='center', color=ARROW_COLOR, fontweight='bold',
          bbox=dict(boxstyle='round,pad=0.2', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
 
@@ -192,6 +192,10 @@ ax2.text(0.05, 0.82, textstr, transform=ax2.transAxes, fontweight='bold',
 ax2.text(0.01, 0.97, r"Kumulativer CO$_2$-Austausch", transform=ax2.transAxes,
          ha='left', va='top', fontweight='bold',
          bbox=dict(boxstyle='round,pad=0.3', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
+
+# Positive cumulative -> net source: label the shaded area on the right
+ax2.text(0.98, 0.45, 'CO$_2$-Quelle', transform=ax2.transAxes,
+         ha='right', va='center', color='#1b5e20', fontweight='bold', alpha=0.9)
 ax2.set_ylabel(r"Kumulativ (g CO$_2$ m$^{-2}$)")
 ax2.grid(True, alpha=0.2)
 
