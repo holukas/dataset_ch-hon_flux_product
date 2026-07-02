@@ -1,18 +1,21 @@
 """
-Compare March cumulative NEE and ET across 3 years (2024, 2025, 2026)
+Compare March cumulative CO2 exchange across 3 years (2024, 2025, 2026), in g CO2 m-2
 """
 
 import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import pandas as pd
 from diive.core.io.files import load_parquet
 
 warnings.filterwarnings('ignore')
 
 # Apply modern plot style
 plt.style.use('seaborn-v0_8-darkgrid')
+# Single font family and size for all text elements
+FONT_FAMILY = 'sans-serif'
+FONT_SIZE = 15
+
 plt.rcParams.update({
     'figure.facecolor': '#ffffff',
     'axes.facecolor': '#ffffff',
@@ -21,6 +24,14 @@ plt.rcParams.update({
     'axes.spines.bottom': True,
     'axes.spines.right': False,
     'axes.spines.top': False,
+    'font.family': FONT_FAMILY,
+    'font.size': FONT_SIZE,
+    'axes.titlesize': FONT_SIZE,
+    'axes.labelsize': FONT_SIZE,
+    'xtick.labelsize': FONT_SIZE,
+    'ytick.labelsize': FONT_SIZE,
+    'legend.fontsize': FONT_SIZE,
+    'figure.titlesize': FONT_SIZE,
 })
 
 # ============================================================================
@@ -32,14 +43,10 @@ DATA_OUT_DIR = SCRIPT_DIR.parent / "data" / "out"
 
 FILENAME = "06_L4.1_FLUXES_MERGED.parquet"
 NEE_COL = "NEE_L3.1_L3.3_CUT_50_QCF_gfXG"
-LE_COL = "LE_L3.1_L3.3_CUT_NONE_QCF_gfXG"
 
-# Unit conversion factors
-# NEE: umol CO2 m-2 s-1 to g C m-2 30min-1
-NEE_UMOL_TO_G_C_30MIN = 0.02161926
-
-# LE: W m-2 to mm 30min-1 (evapotranspiration)
-LE_TO_ET_30MIN = 7.3469e-4
+# Unit conversion: umol CO2 m-2 s-1 to g CO2 m-2 30min-1 (CO2 mass, no C conversion)
+# = 60 x 30 x 44.0095 x 10-6 = 0.0792171
+UMOL_TO_G_CO2_30MIN = 0.0792171
 
 # Color scheme - Material Design colors per year
 COLOR_2024 = "#3f51b5"  # Indigo
@@ -60,163 +67,96 @@ print(f"Loading: {filepath}")
 df = load_parquet(filepath=str(filepath))
 
 # ============================================================================
-# Filter for months and prepare data
+# Filter for March and prepare cumulative data
 # ============================================================================
 
-months_to_plot = [3]  # March only
-month_names = {3: "März"}
+MONTH = 3
+month_name = "März"
 
 df['month'] = df.index.month
 df['year'] = df.index.year
 
-# Extract and convert variables
-nee_umol = df[NEE_COL].copy()
-nee = nee_umol * NEE_UMOL_TO_G_C_30MIN  # Convert to g C m-2 30min-1
+# Extract and convert NEE to g CO2 m-2 30min-1
+nee = df[NEE_COL].copy() * UMOL_TO_G_CO2_30MIN
 
-le = df[LE_COL].copy()
-et = le * LE_TO_ET_30MIN  # Convert to mm 30min-1
-
-# Get available years
 years = sorted(df['year'].unique())
 print(f"Years available: {years}")
 
-# Calculate cumulative for each month and year
-cumulative_data_by_month = {}
+month_data = df[df['month'] == MONTH].copy()
+print(f"\n{month_name} records: {len(month_data)}")
 
-for month in months_to_plot:
-    month_data = df[df['month'] == month].copy()
-    print(f"\n{month_names[month]} records: {len(month_data)}")
+# Fractional day (day + hour/24 + minute/1440) for half-hourly alignment across years
+month_data['day_fraction'] = (month_data.index.day +
+                              month_data.index.hour / 24.0 +
+                              month_data.index.minute / 1440.0)
+nee_month = nee[month_data.index]
 
-    # Add day of month and fractional day for half-hourly alignment
-    month_data['day_of_month'] = month_data.index.day
-    # Fractional day: day + hour/24 + minute/1440
-    month_data['day_fraction'] = (month_data.index.day +
-                                  month_data.index.hour / 24.0 +
-                                  month_data.index.minute / 1440.0)
+cumulative_by_year = {}
+for year in years:
+    year_mask = month_data['year'] == year
+    year_data = month_data[year_mask]
+    if len(year_data) == 0:
+        continue
 
-    nee_month = nee[month_data.index]
-    et_month = et[month_data.index]
-
-    cumulative_data_by_month[month] = {}
-
-    for year in years:
-        year_mask = month_data['year'] == year
-        year_data = month_data[year_mask].copy()
-
-        if len(year_data) == 0:
-            continue
-
-        nee_year = nee_month[year_mask]
-        et_year = et_month[year_mask]
-
-        nee_filled = nee_year.fillna(0)
-        et_filled = et_year.fillna(0)
-
-        nee_cum = nee_filled.cumsum()
-        et_cum = et_filled.cumsum()
-
-        # Use fractional day for x-axis alignment
-        day_fraction = year_data['day_fraction'].values
-
-        cumulative_data_by_month[month][year] = {
-            'day_fraction': day_fraction,
-            'nee_cum': nee_cum.values,
-            'et_cum': et_cum.values,
-            'nee_total': nee_cum.iloc[-1] if len(nee_cum) > 0 else 0,
-            'et_total': et_cum.iloc[-1] if len(et_cum) > 0 else 0,
-            'days_count': len(year_data),
-        }
-
-        print(f"  {year}: {cumulative_data_by_month[month][year]['days_count']} days, "
-              f"NEE={cumulative_data_by_month[month][year]['nee_total']:.1f} g C m-2, "
-              f"ET={cumulative_data_by_month[month][year]['et_total']:.1f} mm")
+    nee_cum = nee_month[year_mask].fillna(0).cumsum()
+    cumulative_by_year[year] = {
+        'day_fraction': year_data['day_fraction'].values,
+        'nee_cum': nee_cum.values,
+        'nee_total': nee_cum.iloc[-1] if len(nee_cum) > 0 else 0,
+        'days_count': len(year_data),
+    }
+    print(f"  {year}: {cumulative_by_year[year]['days_count']} days, "
+          f"NEE={cumulative_by_year[year]['nee_total']:.1f} g CO2 m-2")
 
 # ============================================================================
-# Plot March NEE & ET Comparison (side by side)
+# Plot March cumulative CO2 comparison
 # ============================================================================
 
-fig, (ax_nee, ax_et) = plt.subplots(1, 2, figsize=(16, 6))
+fig, ax = plt.subplots(1, 1, figsize=(12, 7))
 
 colors = {2024: COLOR_2024, 2025: COLOR_2025, 2026: COLOR_2026}
-month = 3
 
-# Plot NEE
 for year in years:
-    if month in cumulative_data_by_month and year in cumulative_data_by_month[month]:
-        day_frac = cumulative_data_by_month[month][year]['day_fraction']
-        nee_cum = cumulative_data_by_month[month][year]['nee_cum']
-        color = colors.get(year, "#999999")
-        ax_nee.plot(day_frac, nee_cum, alpha=0.9, c=color, linewidth=1.8, label=str(year))
-        ax_nee.fill_between(day_frac, nee_cum, alpha=0.15, color=color)
+    if year not in cumulative_by_year:
+        continue
+    day_frac = cumulative_by_year[year]['day_fraction']
+    nee_cum = cumulative_by_year[year]['nee_cum']
+    color = colors.get(year, "#999999")
+    ax.plot(day_frac, nee_cum, alpha=0.9, c=color, linewidth=1.8, label=str(year))
+    ax.fill_between(day_frac, nee_cum, alpha=0.15, color=color)
 
-ax_nee.axhline(0, color=DARK_COLOR, linewidth=1, alpha=0.5, linestyle='-', zorder=5)
-ax_nee.set_title(r"Kumulativer C-Austausch im März – Vergleich (3 Jahre)", fontsize=14, fontweight='bold')
-ax_nee.set_xlabel("Tag im März")
-ax_nee.set_ylabel(r"Kumulativ (g C m$^{-2}$)")
-ax_nee.grid(True, alpha=0.2)
-ax_nee.legend(title="Jahr", loc='upper left', fontsize=10)
+ax.axhline(0, color=DARK_COLOR, linewidth=1, alpha=0.5, linestyle='-', zorder=5)
+ax.text(0.01, 0.97, r"Kumulativer CO$_2$-Austausch im März – Vergleich (3 Jahre)",
+        transform=ax.transAxes, ha='left', va='top', fontweight='bold',
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='#ffffff', alpha=0.7, edgecolor='none'))
+ax.set_xlabel("Tag im März")
+ax.set_ylabel(r"Kumulativ (g CO$_2$ m$^{-2}$)")
+ax.grid(True, alpha=0.2)
+ax.legend(title="Jahr", loc='upper left', bbox_to_anchor=(0.01, 0.90), frameon=False)
 
-# Set axis limits
-all_days_nee = []
-all_nee = []
-for year in years:
-    if month in cumulative_data_by_month and year in cumulative_data_by_month[month]:
-        all_days_nee.extend(cumulative_data_by_month[month][year]['day_fraction'])
-        all_nee.extend(cumulative_data_by_month[month][year]['nee_cum'])
+# Positive cumulative -> net source: label the shaded area (lower right)
+ax.text(0.98, 0.12, 'CO$_2$-Quelle', transform=ax.transAxes,
+        ha='right', va='center', color='#212529', fontweight='bold', alpha=0.9)
 
-if all_days_nee:
-    ax_nee.set_xlim(min(all_days_nee), max(all_days_nee))
-    ax_nee.set_ylim(0, max(all_nee) * 1.02)
+# Axis limits from data range; y starts exactly on zero
+all_days = [d for year in cumulative_by_year for d in cumulative_by_year[year]['day_fraction']]
+all_nee = [v for year in cumulative_by_year for v in cumulative_by_year[year]['nee_cum']]
+if all_days:
+    ax.set_xlim(min(all_days), max(all_days))
+    ax.set_ylim(0, max(all_nee) * 1.02)
 
-# Styling for NEE
-ax_nee.spines['left'].set_visible(True)
-ax_nee.spines['bottom'].set_visible(True)
-ax_nee.spines['right'].set_visible(False)
-ax_nee.spines['top'].set_visible(False)
-ax_nee.spines['left'].set_linewidth(1.0)
-ax_nee.spines['bottom'].set_linewidth(1.0)
-ax_nee.spines['left'].set_color(DARK_COLOR)
-ax_nee.spines['bottom'].set_color(DARK_COLOR)
-ax_nee.tick_params(axis='both', which='major', length=6, width=1.2, colors=DARK_COLOR)
-
-# Plot ET
-for year in years:
-    if month in cumulative_data_by_month and year in cumulative_data_by_month[month]:
-        day_frac = cumulative_data_by_month[month][year]['day_fraction']
-        et_cum = cumulative_data_by_month[month][year]['et_cum']
-        color = colors.get(year, "#999999")
-        ax_et.plot(day_frac, et_cum, alpha=0.9, c=color, linewidth=1.8, label=str(year))
-        ax_et.fill_between(day_frac, et_cum, alpha=0.15, color=color)
-
-ax_et.axhline(0, color=DARK_COLOR, linewidth=1, alpha=0.5, linestyle='-', zorder=5)
-ax_et.set_title(r"Kumulativer Wasseraustausch im März – Vergleich (3 Jahre)", fontsize=14, fontweight='bold')
-ax_et.set_xlabel("Tag im März")
-ax_et.set_ylabel(r"Kumulativ (mm)")
-ax_et.grid(True, alpha=0.2)
-ax_et.legend(title="Jahr", loc='upper left', fontsize=10)
-
-# Set axis limits
-all_days_et = []
-all_et = []
-for year in years:
-    if month in cumulative_data_by_month and year in cumulative_data_by_month[month]:
-        all_days_et.extend(cumulative_data_by_month[month][year]['day_fraction'])
-        all_et.extend(cumulative_data_by_month[month][year]['et_cum'])
-
-if all_days_et:
-    ax_et.set_xlim(min(all_days_et), max(all_days_et))
-    ax_et.set_ylim(0, max(all_et) * 1.02)
-
-# Styling for ET
-ax_et.spines['left'].set_visible(True)
-ax_et.spines['bottom'].set_visible(True)
-ax_et.spines['right'].set_visible(False)
-ax_et.spines['top'].set_visible(False)
-ax_et.spines['left'].set_linewidth(1.0)
-ax_et.spines['bottom'].set_linewidth(1.0)
-ax_et.spines['left'].set_color(DARK_COLOR)
-ax_et.spines['bottom'].set_color(DARK_COLOR)
-ax_et.tick_params(axis='both', which='major', length=6, width=1.2, colors=DARK_COLOR)
+# Spines + ticks (match other plots)
+ax.spines['left'].set_visible(True)
+ax.spines['bottom'].set_visible(True)
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.spines['left'].set_linewidth(1.0)
+ax.spines['bottom'].set_linewidth(1.0)
+ax.spines['left'].set_color(DARK_COLOR)
+ax.spines['bottom'].set_color(DARK_COLOR)
+ax.tick_params(axis='x', which='major', length=6, width=1.0)
+ax.tick_params(axis='y', which='major', length=5, width=0.8)
+ax.tick_params(axis='both', which='major', pad=5)
 
 plt.tight_layout()
 outfile = DATA_OUT_DIR / "10_March_comparison.png"
