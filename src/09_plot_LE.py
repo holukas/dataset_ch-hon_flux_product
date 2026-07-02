@@ -48,7 +48,7 @@ LE_COL = "LE_L3.1_L3.3_CUT_NONE_QCF_gfXG"
 # = 1800 / (2.45e6 × 1000) = 7.3469e-4 mm/W
 LE_TO_ET_30MIN = 7.3469e-4
 
-script_id = "08"
+script_id = "09"
 
 # ============================================================================
 # Load data
@@ -211,7 +211,7 @@ ax1.set_xlim(et_mm.index[0], et_mm.index[-1])
 ax2.set_xlim(et_cumulative.index[0], et_cumulative.index[-1])
 
 plt.tight_layout()
-outfile = DATA_OUT_DIR / f"08_LE_timeseries_{et_mm.index[0].date()}_{et_mm.index[-1].date()}.png"
+outfile = DATA_OUT_DIR / f"09_LE_timeseries_{et_mm.index[0].date()}_{et_mm.index[-1].date()}.png"
 fig.savefig(outfile, dpi=150, bbox_inches='tight')
 print(f"\nSaved: {outfile}")
 
@@ -256,7 +256,7 @@ ax_dc.tick_params(axis='y', which='both', right=False)
 ax_dc.set_ylim(0)
 
 plt.tight_layout()
-outfile_dc = DATA_OUT_DIR / f"08_LE_DielCycle_{et_mm.index[0].date()}_{et_mm.index[-1].date()}.png"
+outfile_dc = DATA_OUT_DIR / f"09_LE_DielCycle_{et_mm.index[0].date()}_{et_mm.index[-1].date()}.png"
 fig.savefig(outfile_dc, dpi=150, bbox_inches='tight')
 print(f"Saved: {outfile_dc}")
 

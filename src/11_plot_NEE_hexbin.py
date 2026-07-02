@@ -37,7 +37,7 @@ GRIDSIZE = 20         # Resolution of hexbin grid (lower = larger hexagons, bett
 CMAP = 'RdYlBu_r'       # Color map: Red (low NEE) → Yellow → Green (high NEE)
 MINCNT = 5            # Minimum observations per hexagon for visibility
 
-script_id = "10"
+script_id = "11"
 
 # ============================================================================
 # Load data
