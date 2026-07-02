@@ -465,7 +465,6 @@ requires-dist = [
     { name = "bokeh", specifier = ">=3.7.1,<4.0.0" },
     { name = "category-encoders", specifier = ">=2.8.1,<3.0.0" },
     { name = "dtreeviz", specifier = ">=2.2.2,<3.0.0" },
-    { name = "econml", marker = "extra == 'causal'", specifier = ">=0.15" },
     { name = "eli5", specifier = ">=0.14.0,<0.15.0" },
     { name = "jupyter-bokeh", specifier = ">=4.0.5,<5.0.0" },
     { name = "matplotlib", specifier = ">=3.10.0,<4.0.0" },
@@ -486,16 +485,16 @@ requires-dist = [
     { name = "shap", specifier = ">=0.48.0,<1.0.0" },
     { name = "statsmodels", specifier = ">=0.14.4,<0.15.0" },
     { name = "textual", specifier = ">=8.2.7" },
-    { name = "tigramite", marker = "extra == 'causal'", specifier = ">=5.2" },
+    { name = "trimesh", marker = "extra == 'gui3d'", specifier = ">=4.0" },
     { name = "uncertainties", specifier = ">=3.2.2,<4.0.0" },
     { name = "xgboost", specifier = ">=3.0.0,<4.0.0" },
     { name = "yellowbrick", specifier = ">=1.5,<2.0" },
 ]
-provides-extras = ["causal", "gui", "gui3d"]
+provides-extras = ["gui", "gui3d"]
 
 [package.metadata.requires-dev]
 build = [{ name = "pyinstaller", specifier = ">=6.10" }]
-db = [{ name = "dbc-influxdb", editable = "../../poet/dbc-influxdb" }]
+db = [{ name = "influxdb-client", specifier = ">=1.37.0" }]
 dev = [
     { name = "autopep8", specifier = ">=2.3.2" },
     { name = "furo", specifier = ">=2025.12.19" },
